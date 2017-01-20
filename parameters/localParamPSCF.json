@@ -1,0 +1,46 @@
+{
+    "species": [
+        "Sea salt"
+    ],
+    "station": "OPE",
+    "threshold": "[0.4]",
+    "backTraj": 72,
+    "wFval": [
+        "0.08",
+        "0.35",
+        "0.725",
+        "1.0"
+    ],
+    "Cfile": "/home/samuel/Documents/LGGE/PSCF/concentrations/OPE.csv",
+    "plotBT": false,
+    "LatMax": 64.0,
+    "dirBackTraj": "/home/samuel/Documents/LGGE/PSCF/retrotrajectoires/OPE/",
+    "wFlim": [
+        "0.30",
+        "0.6",
+        "0.85"
+    ],
+    "percentile": "[75]",
+    "prefix": "traj_OPE_",
+    "LonMin": -25.0,
+    "smooth": true,
+    "wF": true,
+    "LatMin": 32.5,
+    "add_hour": "[-3, 0, 3, 6, 9, 12, 15]",
+    "percentileBool": true,
+    "resolutionQuality": "low",
+    "LonMax": 35.0,
+    "polarPlot": false,
+    "wFmanual": false,
+    "rainBool": false,
+    "dateMax": [
+        "2015",
+        "11",
+        "15"
+    ],
+    "dateMin": [
+        "2012",
+        "01",
+        "20"
+    ]
+}

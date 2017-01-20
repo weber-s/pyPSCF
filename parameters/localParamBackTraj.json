@@ -1,0 +1,24 @@
+{
+    "lat": "48.53",
+    "dirGDAS": "/run/media/samuel/My Passport/GDAS1/",
+    "hBT": "-72",
+    "lon": "5.50",
+    "dirOutput": "/home/samuel/Documents/LGGE/PSCF/retrotrajectoires/OPE/",
+    "cpu": 3,
+    "alt": "100.0",
+    "date": [
+        "13",
+        "01",
+        "01",
+        "00"
+    ],
+    "dirHysplit": "/home/samuel/Documents/LGGE/hysplit/",
+    "dateEnd": [
+        "15",
+        "10",
+        "01",
+        "00"
+    ],
+    "stepHH": "3",
+    "station": "OPE"
+}
