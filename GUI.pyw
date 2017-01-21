@@ -1187,10 +1187,10 @@ class aboutTab(Frame):
                             column=0,
                             sticky=N+E+S+W)
 
-        data_file = open("about.txt")
-        data = data_file.read()
-        data_file.close()
-        
+        data = """This GUI is an adapted GUI from the game "The Battle For Westnoth", developed by Elvish_Hunter, 2014-2015,\n under the GNU GPL v2 license.\n
+Original PSCF script: Jean-Eudes PETIT \n
+New PSCF script and GUI tools : Samuel WEBER\n
+Icons are taken from the Tango Desktop Project (http://tango.freedesktop.org) and are released in the Public Domain."""
         text = Label(self.text_frame, text=data)
         text.grid(row=0,
                  column=0,
