@@ -23,6 +23,7 @@ else: # we are on Python 2
     from Tkinter import *
     from tkMessageBox import *
     from tkFileDialog import *
+    import ScrolledText as tkst
     # ttk must be called last
     from ttk import *
 
@@ -315,17 +316,17 @@ class StationTab(Frame):
         self.stationOptionMenu=OptionMenu(self.modif_frame, self.station, self.station.get(), *self.locStation, command=self.station_callback)
         self.stationOptionMenu.grid(row=0, column=1, columnspan=3, sticky=W, padx=5, pady=5)
 
-        self.latLabel=Label(self.modif_frame,text="latitude",justify=LEFT)
+        self.latLabel=Label(self.modif_frame,text="Latitude",justify=LEFT)
         self.latLabel.grid(row=1, column=0, sticky=E+W, padx=5, pady=5)
         self.latEntry=EntryContext(self.modif_frame, width=10,textvariable=self.lat)
         self.latEntry.grid(row=1,column=1, sticky=E+W, padx=5, pady=5)
 
-        self.lonLabel=Label(self.modif_frame,text="longitude",justify=LEFT)
+        self.lonLabel=Label(self.modif_frame,text="Longitude",justify=LEFT)
         self.lonLabel.grid(row=2, column=0, sticky=E+W, padx=5, pady=5)
         self.lonEntry=EntryContext(self.modif_frame, width=10,textvariable=self.lon)
         self.lonEntry.grid(row=2,column=1, sticky=E+W, padx=5, pady=5)
 
-        self.altLabel=Label(self.modif_frame,text="altitude",justify=LEFT)
+        self.altLabel=Label(self.modif_frame,text="Altitude",justify=LEFT)
         self.altLabel.grid(row=3, column=0, sticky=E+W, padx=5, pady=5)
         self.altEntry=EntryContext(self.modif_frame, width=10,textvariable=self.alt)
         self.altEntry.grid(row=3,column=1, sticky=E+W, padx=5, pady=5)

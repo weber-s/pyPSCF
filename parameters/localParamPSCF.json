@@ -1,46 +1,46 @@
 {
-    "species": [
-        "Sea salt"
-    ],
-    "station": "OPE",
-    "threshold": "[0.4]",
+    "dirBackTraj": "/home/samuel/Documents/LGGE/PSCF/retrotrajectoires/LYON/",
+    "Cfile": "/home/samuel/Documents/LGGE/PSCF/concentrations/LYON.csv",
+    "station": "LYON",
+    "prefix": "traj_LYON_",
     "backTraj": 72,
+    "add_hour": "[-3, 0, 3, 6, 9, 12, 15]",
+    "dateMin": [
+        "2012",
+        "01",
+        "20"
+    ],
+    "dateMax": [
+        "2015",
+        "11",
+        "15"
+    ],
+    "species": [
+        "NH4"
+    ],
+    "threshold": "[0.4]",
+    "percentileBool": true,
+    "percentile": "[75]",
+    "wF": true,
+    "wFmanual": false,
+    "wFlim": [
+        "0.30",
+        "0.6",
+        "0.85"
+    ],
     "wFval": [
         "0.08",
         "0.35",
         "0.725",
         "1.0"
     ],
-    "Cfile": "/home/samuel/Documents/LGGE/PSCF/concentrations/OPE.csv",
-    "plotBT": false,
-    "LatMax": 64.0,
-    "dirBackTraj": "/home/samuel/Documents/LGGE/PSCF/retrotrajectoires/OPE/",
-    "wFlim": [
-        "0.30",
-        "0.6",
-        "0.85"
-    ],
-    "percentile": "[75]",
-    "prefix": "traj_OPE_",
-    "LonMin": -25.0,
     "smooth": true,
-    "wF": true,
-    "LatMin": 32.5,
-    "add_hour": "[-3, 0, 3, 6, 9, 12, 15]",
-    "percentileBool": true,
-    "resolutionQuality": "low",
-    "LonMax": 35.0,
+    "plotBT": false,
     "polarPlot": false,
-    "wFmanual": false,
+    "resolutionQuality": "low",
     "rainBool": false,
-    "dateMax": [
-        "2015",
-        "11",
-        "15"
-    ],
-    "dateMin": [
-        "2012",
-        "01",
-        "20"
-    ]
+    "LonMin": -25.0,
+    "LonMax": 35.0,
+    "LatMin": 32.5,
+    "LatMax": 64.0
 }
