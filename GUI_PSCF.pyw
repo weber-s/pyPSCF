@@ -6,7 +6,7 @@ import json
 import shutil
 import numpy as np
 from ast import literal_eval
-from multiprocessing import *
+from multiprocessing import Process
 # sys.version_info checks the interpreter version
 # this is used to have a script that can run on both Python2 and Python3
 # not that useful until the mainline tools are updated, but still...
@@ -14,42 +14,29 @@ if sys.version_info.major >= 3:
     from tkinter import *
     from tkinter.messagebox import *
     from tkinter.filedialog import *
-    import tkinter.scrolledtext as tkst
     # ttk must be called last
     from tkinter.ttk import *
+    #sys.exit("You have to run it with python 2, not python 3.")
 else: # we are on Python 2
     #import Queue
     # tkinter modules
     from Tkinter import *
     from tkMessageBox import *
     from tkFileDialog import *
-    import ScrolledText as tkst
     # ttk must be called last
     from ttk import *
 
 from modules.PSCF4GUI import PSCF, specie2study
-from modules.backTraj4GUI import *
 
 def arr2json(arr):
     return json.dumps(arr.tolist())
 def json2arr(astr,dtype):
     return np.fromiter(json.loads(astr),dtype)
 
-class TextRedirector(object):
-    """Redirect the stdout to the window"""
-    def __init__(self, widget, tag="stdout"):
-        self.widget = widget
-        self.tag = tag
-
-    def write(self, str):
-        self.widget.configure(state="normal")
-        self.widget.insert("end", str, (self.tag,))
-        self.widget.configure(state="disabled")
-
 class ContextMenu(Menu):
     def __init__(self,x,y,widget):
         """A subclass of Menu, used to display a context menu in Text and Entry widgets
-    If the widget isn't active, some options do not appear"""
+If the widget isn't active, some options do not appear"""
         if sys.version_info.major>=3:
             super().__init__(None,tearoff=0) # otherwise Tk allows splitting it in a new window
         else:
@@ -101,7 +88,7 @@ class ContextMenu(Menu):
 class EntryContext(Entry):
     def __init__(self,parent,**kwargs):
         """An enhanced Entry widget that has a right-click menu
-    Use like any other Entry widget"""
+Use like any other Entry widget"""
         if sys.version_info.major>=3:
             super().__init__(parent,**kwargs)
         else:
@@ -145,14 +132,13 @@ class EntryContext(Entry):
 class SelectFile(LabelFrame):
     def __init__(self,parent,textvariable=None, title="Directory", **kwargs):
         """A subclass of LabelFrame sporting a readonly Entry and a Button with a folder icon.
-        It comes complete with a context menu and a directory selection screen"""
+It comes complete with a context menu and a directory selection screen"""
         if sys.version_info.major>=3:
             super().__init__(parent,text=title,**kwargs)
         else:
             LabelFrame.__init__(self,parent,text=title,**kwargs)
         self.textvariable=textvariable
         self.dir_entry=EntryContext(self,
-                                    width=40,
                                     textvariable=self.textvariable)
         self.dir_entry.pack(side=LEFT,
                             fill=BOTH,
@@ -204,10 +190,11 @@ class SelectFile(LabelFrame):
     def on_clear(self):
         self.textvariable.set("")
 
+
 class SelectDirectory(LabelFrame):
     def __init__(self,parent,textvariable=None, title="Directory", **kwargs):
         """A subclass of LabelFrame sporting a readonly Entry and a Button with a folder icon.
-        It comes complete with a context menu and a directory selection screen"""
+It comes complete with a context menu and a directory selection screen"""
         if sys.version_info.major>=3:
             super().__init__(parent,text=title,**kwargs)
         else:
@@ -269,582 +256,141 @@ class SelectDirectory(LabelFrame):
     def on_clear(self):
         self.textvariable.set("")
 
-
-class StationTab(Frame):
+class MainFrame(Frame):
     def __init__(self,parent):
+        self.parent=parent
         if sys.version_info.major>=3:
             super().__init__(parent)
         else:
             Frame.__init__(self,parent)
-
-        self.station_frame=LabelFrame(self,
-                                    text="Stations parameters")
-        self.station_frame.grid(row=0,
-                              column=0,
-                              sticky=N+E+S+W)
-        
-        self.info=Label(self.station_frame,
-                       text="Manage station longitude, latitude and altitude.")
-        self.info.grid(row=0,
-                      column=0,
-                      sticky=N+E+S+W)
-        # load station
-        with open('parameters'+os.sep+'locationStation.json', 'r') as dataFile:
-            self.locStation=json.load(dataFile)
-
-        # ===== Station to modify or delete ======================================
-        self.modif_frame=LabelFrame(self.station_frame,
-                                   text="Modify existing station")
-        self.modif_frame.grid(row=1,
-                              column=0,
-                              sticky=N+E+S+W)
-
-        self.station=StringVar()
-        # maybe the worth method to get the first key of this dict...
-        for key in self.locStation:
-            self.station.set(key)
-            break
-        self.lat=StringVar()
-        self.lon=StringVar()
-        self.alt=StringVar()
-        self.lat.set(self.locStation[self.station.get()][0])
-        self.lon.set(self.locStation[self.station.get()][1])
-        self.alt.set(self.locStation[self.station.get()][2])
-
-        self.stationLabel=Label(self.modif_frame, text="Station", justify=LEFT)
-        self.stationLabel.grid(row=0, column=0, sticky=W, padx=5, pady=5)
-        self.stationOptionMenu=OptionMenu(self.modif_frame, self.station, self.station.get(), *self.locStation, command=self.station_callback)
-        self.stationOptionMenu.grid(row=0, column=1, columnspan=3, sticky=W, padx=5, pady=5)
-
-        self.latLabel=Label(self.modif_frame,text="Latitude",justify=LEFT)
-        self.latLabel.grid(row=1, column=0, sticky=E+W, padx=5, pady=5)
-        self.latEntry=EntryContext(self.modif_frame, width=10,textvariable=self.lat)
-        self.latEntry.grid(row=1,column=1, sticky=E+W, padx=5, pady=5)
-
-        self.lonLabel=Label(self.modif_frame,text="Longitude",justify=LEFT)
-        self.lonLabel.grid(row=2, column=0, sticky=E+W, padx=5, pady=5)
-        self.lonEntry=EntryContext(self.modif_frame, width=10,textvariable=self.lon)
-        self.lonEntry.grid(row=2,column=1, sticky=E+W, padx=5, pady=5)
-
-        self.altLabel=Label(self.modif_frame,text="Altitude",justify=LEFT)
-        self.altLabel.grid(row=3, column=0, sticky=E+W, padx=5, pady=5)
-        self.altEntry=EntryContext(self.modif_frame, width=10,textvariable=self.alt)
-        self.altEntry.grid(row=3,column=1, sticky=E+W, padx=5, pady=5)
-
-        # ===== Button 
-        self.buttonBoxModif=Frame(self.modif_frame)
-        self.buttonBoxModif.grid(row=4,
-                            column=0,
-                            columnspan=4,
-                            sticky=E+W)
-        self.save_button=Button(self.buttonBoxModif,
-                               text="Save",
-                               image=ICONS['save'],
-                               compound=LEFT,
-                               width=15, # to avoid changing size when callback is called
-                               command=self.on_save)
-        self.save_button.pack(side=LEFT, padx=5, pady=5)
-        self.delete_button=Button(self.buttonBoxModif,
-                               text="Delete",
-                               #image=ICONS['save'],
-                               compound=LEFT,
-                               width=15, # to avoid changing size when callback is called
-                               command=self.on_delete)
-        self.delete_button.pack(side=RIGHT, padx=5, pady=5)
-
-        # ===== Add a station =========================================================
-        self.add_frame=LabelFrame(self.station_frame,
-                            text="Add a new station")
-        self.add_frame.grid(row=2,
-                           column=0,
-                           sticky=N+E+S+W,
-                           padx=5,
-                           pady=5)
-        self.addLabelName=Label(self.add_frame, text="Station name")
-        self.addLabelName.grid(row=0, column=0, sticky=E+W, padx=5, pady=5)
-        self.addEntryName=EntryContext(self.add_frame, width=10)
-        self.addEntryName.grid(row=0, column=1, sticky=E+W, padx=5, pady=5)
-        self.addLabelLatitude=Label(self.add_frame, text="Latitude")
-        self.addLabelLatitude.grid(row=1, column=0, sticky=E+W, padx=5, pady=5)
-        self.addEntryLatitude=EntryContext(self.add_frame, width=10)
-        self.addEntryLatitude.grid(row=1, column=1, sticky=E+W, padx=5, pady=5)
-        self.addLabelLongitude=Label(self.add_frame, text="Longitude")
-        self.addLabelLongitude.grid(row=2, column=0, sticky=E+W, padx=5, pady=5)
-        self.addEntryLongitude=EntryContext(self.add_frame, width=10)
-        self.addEntryLongitude.grid(row=2, column=1, sticky=E+W, padx=5, pady=5)
-        self.addLabelAltitude=Label(self.add_frame, text="Altitude")
-        self.addLabelAltitude.grid(row=3, column=0, sticky=E+W, padx=5, pady=5)
-        self.addEntryAltitude=EntryContext(self.add_frame, width=10)
-        self.addEntryAltitude.grid(row=3, column=1, sticky=E+W, padx=5, pady=5)
-
-        # ===== Button
-        self.buttonBoxAdd=Frame(self.add_frame)
-        self.buttonBoxAdd.grid(row=4,
-                            column=0,
-                            columnspan=2,
-                            sticky=E+W)
-        self.save_button_add=Button(self.buttonBoxAdd,
-                               text="Save",
-                               image=ICONS['save'],
-                               compound=LEFT,
-                               width=15, # to avoid changing size when callback is called
-                               command=self.on_save_add)
-        self.save_button_add.pack(side=LEFT, padx=5, pady=5)
-
-    def station_callback(self, event):
-        """Update the lat/lon/alt for the station"""
-        self.lat.set(self.locStation[self.station.get()][0])
-        self.lon.set(self.locStation[self.station.get()][1])
-        self.alt.set(self.locStation[self.station.get()][2])
-
-    def on_save(self):
-        """Save the selected lon/lat/lat station from the 'locationStation.json' file"""
-        with open('parameters'+os.sep+'locationStation_tmp.json', 'w') as fileSave:
-            try:
-                self.locStation[self.station.get()]=[self.lat.get(), self.lon.get(), self.alt.get()]
-            except (ValueError, SyntaxError):
-                os.remove('parameters'+os.sep+'locationStation_tmp.json')
-                showinfo("""Error""", """There is a problem somewhere... Probably a typo. The 'locationStation.json' file is not updated due to this problem.""")
-                return 0
-            json.dump(self.locStation, fileSave, indent=4)
-        shutil.copy('parameters'+os.sep+'locationStation_tmp.json', 'parameters'+os.sep+'locationStation.json')
-        os.remove('parameters'+os.sep+'locationStation_tmp.json')
-        print('Station '+self.station.get()+' saved')
-        return 1
-
-    def on_delete(self):
-        """Delete the selected station from the 'locationStation.json' file"""
-        with open('parameters'+os.sep+'locationStation_tmp.json', 'w') as fileSave:
-            try:
-                # remove the station from the dict
-                rep=askokcancel(title="Beware!", message="You are about to delete the station "+self.station.get()+", are you sure of it?")
-                if rep:
-                    self.locStation.pop(self.station.get())
-            except (ValueError, SyntaxError, KeyError):
-                os.remove('parameters'+os.sep+'locationStation_tmp.json')
-                showinfo("""Error""", """There is a problem somewhere... Probably a typo. The 'locationStation.json' file is not updated due to this problem.""")
-                return 0
-            json.dump(self.locStation, fileSave, indent=4)
-
-        shutil.copy('parameters'+os.sep+'locationStation_tmp.json', 'parameters'+os.sep+'locationStation.json')
-        os.remove('parameters'+os.sep+'locationStation_tmp.json')
-
-        print('Station '+self.station.get()+' deleted')
-        # TODO: change station and update the list
-        for key in self.locStation:
-            self.station.set(key)
-            return
-        self.station_callback()
-
-        return 1
-
-    def on_save_add(self):
-        """Save the new station into the 'locationStation.json' file"""
-        # check if the station already exist
-        for key in self.locStation:
-            if key == self.addEntryName.get():
-                showinfo("""Error""", """The station already exist, try to update it instead of add it again.""")
-                return 0
-        with open('parameters'+os.sep+'locationStation_tmp.json', 'w') as fileSave:
-            try:
-                # check if the coordinate are float
-                float(self.addEntryLatitude.get())
-                float(self.addEntryLongitude.get())
-                float(self.addEntryAltitude.get())
-            except (ValueError, SyntaxError):
-                os.remove('parameters'+os.sep+'locationStation_tmp.json')
-                showinfo("""Error""", """There is a problem somewhere... Probably a typo. The 'locationStation.json' file is not updated due to this problem.""")
-                return 0
-
-            self.locStation[self.addEntryName.get()]=[self.addEntryLatitude.get(), self.addEntryLongitude.get(), self.addEntryAltitude.get()]
-            json.dump(self.locStation, fileSave, indent=4)
-        shutil.copy('parameters'+os.sep+'locationStation_tmp.json', 'parameters'+os.sep+'locationStation.json')
-        os.remove('parameters'+os.sep+'locationStation_tmp.json')
-        print('Station '+self.addEntryName.get()+' added')
-        # TODO
-        # add a callback so when a station is add, we can see it in the list 
-        return 1
-
-class TextoutputTab(Frame):
-    def __init__(self,parent):
-        if sys.version_info.major>=3:
-            super().__init__(parent)
-        else:
-            Frame.__init__(self,parent)
-
-        self.output_frame=LabelFrame(self,
-                                    text="Output")
-        self.output_frame.grid(row=0,
-                              column=0,
-                              sticky=N+E+S+W)
-        # ==== Text widget for output ============================================
-        self.output_text=tkst.ScrolledText(self.output_frame,
-                                           wrap="word",
-                                           width=200,
-                                           height=30)
-        self.output_text.grid(row=0,
-                             column=0,
-                             sticky=N+E+S+W)
-        self.output_text.tag_configure("stderr", foreground="#b22222")
-
-
-class BacktrajTab(Frame):
-    def __init__(self,parent):
-        if sys.version_info.major>=3:
-            super().__init__(parent)
-        else:
-            Frame.__init__(self,parent)
-
-        # Import local Param from the JSON file
-        with open('parameters'+os.sep+'localParamBackTraj.json', 'r') as dataFile:
-            self.param=json.load(dataFile)
-        with open('parameters'+os.sep+'locationStation.json', 'r') as dataFile:
-            self.locStation=json.load(dataFile)
-
-        self.Backtraj_frame=LabelFrame(self,
-                                        text="Back-Trajectory options")
-        self.Backtraj_frame.grid(row=0,
-                                column=0,
-                                sticky=N+E+S+W)
-        #Directory
-        self.dirGDAS=StringVar()
-        self.dirGDAS.set(self.param["dirGDAS"])
-        self.dirGDASSelect=SelectDirectory(self.Backtraj_frame, textvariable=self.dirGDAS, title="Meteo (GDAS) directory")
-        self.dirGDASSelect.grid(row=0, column=0, columnspan=2, sticky=E+W, padx=5, pady=5)
-        self.dirHysplit=StringVar()
-        self.dirHysplit.set(self.param["dirHysplit"])
-        self.dirHysplitSelect=SelectDirectory(self.Backtraj_frame, textvariable=self.dirHysplit, title="Hysplit directory")
-        self.dirHysplitSelect.grid(row=1, column=0, columnspan=2, sticky=E+W, padx=5, pady=5)
-        self.dirOutput=StringVar()
-        self.dirOutput.set(self.param["dirOutput"])
-        self.dirOutputSelect=SelectDirectory(self.Backtraj_frame, textvariable=self.dirOutput, title="Output directory")
-        self.dirOutputSelect.grid(row=2, column=0, columnspan=2, sticky=E+W, padx=5, pady=5)
-
-        # ===== Station Frame                                ===================
-        self.station_frame=LabelFrame(self.Backtraj_frame,
-                                      text="Station")
-        self.station_frame.grid(row=3,
-                                column=0,
-                                sticky=E+W+S+N,
-                                padx=5,
-                                pady=5)
-        # ===== Select station
-        self.station=StringVar()
-        self.station.set(self.param["station"])
-        self.stationLabel=Label(self.station_frame, text="Station", justify=LEFT)
-        self.stationLabel.grid(row=0, column=0, sticky=W, padx=5, pady=5)
-        self.stationOptionMenu=OptionMenu(self.station_frame, self.station, self.param["station"], *self.locStation, command=self.station_callback)
-        self.stationOptionMenu.grid(row=0, column=1, columnspan=3, sticky=W, padx=5, pady=5)
-        # ===== Station coord.
-        self.lon=StringVar()
-        self.lon.set(self.locStation[self.station.get()][1])
-        self.lonLabel=Label(self.station_frame, text="Longitude", justify=LEFT)
-        self.lonLabel.grid(row=1, column=0, sticky=W, padx=5, pady=5)
-        self.lonBackTrajEntry=EntryContext(self.station_frame, width=10, textvariable=self.lon)
-        self.lonBackTrajEntry.grid(row=1, column=1, sticky=W, padx=5, pady=5)
-        self.lat=StringVar()
-        self.lat.set(self.locStation[self.station.get()][0])
-        self.latLabel=Label(self.station_frame, text="Latitude", justify=LEFT)
-        self.latLabel.grid(row=2, column=0, sticky=W, padx=5, pady=5)
-        self.latBackTrajEntry=EntryContext(self.station_frame, width=10, textvariable=self.lat)
-        self.latBackTrajEntry.grid(row=2, column=1, sticky=W, padx=5, pady=5)
-        self.alt=StringVar()
-        self.alt.set(self.locStation[self.station.get()][2])
-        self.altLabel=Label(self.station_frame, text="Altitude", justify=LEFT)
-        self.altLabel.grid(row=1, column=4, sticky=W, padx=5, pady=5)
-        self.altEntry=EntryContext(self.station_frame, width=10, textvariable=self.alt)
-        self.altEntry.grid(row=1, column=5, sticky=W, padx=5, pady=5)
-        
-        # ===== Time frame                          ===========================
-        self.time_frame=LabelFrame(self.Backtraj_frame,
-                                  text="Date")
-        self.time_frame.grid(row=3,
-                             column=1,
-                             sticky=E+W+S+N,
-                             padx=5,
-                             pady=5)
-
-        # Start time
-        self.startLabel=Label(self.time_frame, text="Starting day (YY/MM/DD/HH)", justify=LEFT)
-        self.startLabel.grid(row=0,
-                             column=0,
-                             sticky=E+W+S+N,
-                             padx=5, pady=5)
-        self.buttonStart=Frame(self.time_frame)
-        self.buttonStart.grid(row=1, column=0, sticky=W+E+S+N, padx=5, pady=5)
-        self.YY=StringVar()
-        self.YY.set(self.param["date"][0])
-        self.YYLabel=Label(self.buttonStart, text="YY:", justify=LEFT).pack(side=LEFT)
-        self.YYEntry=EntryContext(self.buttonStart, width=5, textvariable=self.YY).pack(side=LEFT)
-        self.MM=StringVar()
-        self.MM.set(self.param["date"][1])
-        self.MMLabel=Label(self.buttonStart, text="MM:", justify=LEFT).pack(side=LEFT)
-        self.MMEntry=EntryContext(self.buttonStart, width=5, textvariable=self.MM).pack(side=LEFT)
-        self.DD=StringVar()
-        self.DD.set(self.param["date"][2])
-        self.DDLabel=Label(self.buttonStart, text="DD:", justify=LEFT).pack(side=LEFT)
-        self.DDEntry=EntryContext(self.buttonStart, width=5, textvariable=self.DD).pack(side=LEFT)
-        self.HH=StringVar()
-        self.HH.set(self.param["date"][3])
-        self.HHLabel=Label(self.buttonStart, text="HH:", justify=LEFT).pack(side=LEFT)
-        self.HHEntry=EntryContext(self.buttonStart, width=5, textvariable=self.HH).pack(side=LEFT)
-        # End time
-        self.endLabel=Label(self.time_frame, text="Ending day (YY/MM/DD/HH)", justify=LEFT)
-        self.endLabel.grid(row=2, column=0,
-                           sticky=E+W,
-                           padx=5, pady=0)
-        self.buttonEnd=Frame(self.time_frame)
-        self.buttonEnd.grid(row=3, column=0, sticky=W+E, padx=5, pady=5)
-        self.YYend=StringVar()
-        self.YYend.set(self.param["dateEnd"][0])
-        self.YYendLabel=Label(self.buttonEnd, text="YY:", justify=LEFT).pack(side=LEFT)
-        self.YYendEntry=EntryContext(self.buttonEnd, width=5, textvariable=self.YYend).pack(side=LEFT)
-        self.MMend=StringVar()
-        self.MMend.set(self.param["dateEnd"][1])
-        self.MMendLabel=Label(self.buttonEnd, text="MM:", justify=LEFT).pack(side=LEFT)
-        self.MMendEntry=EntryContext(self.buttonEnd, width=5, textvariable=self.MMend).pack(side=LEFT)
-        self.DDend=StringVar()
-        self.DDend.set(self.param["dateEnd"][2])
-        self.DDendLabel=Label(self.buttonEnd, text="DD:", justify=LEFT).pack(side=LEFT)
-        self.DDendEntry=EntryContext(self.buttonEnd, width=5, textvariable=self.DDend).pack(side=LEFT)
-        self.HHend=StringVar()
-        self.HHend.set(self.param["dateEnd"][3])
-        self.HHendLabel=Label(self.buttonEnd, text="HH:", justify=LEFT).pack(side=LEFT)
-        self.HHendEntry=EntryContext(self.buttonEnd, width=5, textvariable=self.HHend).pack(side=LEFT)
-
-        # ===== Back Traj param     ============================================
-        self.bt_frame=LabelFrame(self.Backtraj_frame,
-                                text="Back-traj parameters")
-        self.bt_frame.grid(row=4,
-                            column=0,
-                            sticky=E+W+S+N,
-                            padx=5,
-                            pady=5)
-        # Time for BT
-        self.hBT=StringVar()
-        self.hBT.set(self.param["hBT"])
-        self.hBTLabel=Label(self.bt_frame, text="Time for the back-trajectories [h]", justify=LEFT)
-        self.hBTLabel.grid(row=0, column=0, sticky=W, padx=5, pady=5)
-        self.hBTEntry=EntryContext(self.bt_frame, width=5, textvariable=self.hBT)
-        self.hBTEntry.grid(row=0, column=1, sticky=W, padx=5, pady=5)
-        # step between 2 BT
-        self.stepHH=StringVar()
-        self.stepHH.set(self.param["stepHH"])
-        self.stepHHLabel=Label(self.bt_frame, text="Step between 2 end-points [h]", justify=LEFT)
-        self.stepHHLabel.grid(row=2, column=0, sticky=W, padx=5, pady=5)
-        self.stepHHEntry=EntryContext(self.bt_frame, width=5, textvariable=self.stepHH)
-        self.stepHHEntry.grid(row=2, column=1, sticky=W, padx=5, pady=5)
-
-        # ===== CPU frame                          ===========================
-        self.cpu_frame=LabelFrame(self.Backtraj_frame,
-                                  text="CPU")
-        self.cpu_frame.grid(row=4,
-                             column=1,
-                             sticky=E+W+S+N,
-                             padx=5,
-                             pady=5)
-        self.cpu=IntVar()
-        self.cpu.set(cpu_count()-1)
-        self.CPULabel=Label(self.cpu_frame, text="Number of CPU")
-        self.CPULabel.grid(row=0, column=0, sticky=W, padx=5, pady=5)
-        self.CPUEntry=EntryContext(self.cpu_frame, width=5, textvariable=self.cpu)
-        self.CPUEntry.grid(row=0, column=1, sticky=W, padx=5, pady=5)
-        self.l1=Label(self.cpu_frame, text="Each CPU is uses to its maximum. So be careful.")
-        self.l1.grid(row=1, column=0, columnspan=5, sticky=W, padx=5, pady=5)
-        
-        # ====================================================================
-        self.columnconfigure(0,weight=10)
-        self.Backtraj_frame.columnconfigure(0,weight=10)
-        self.Backtraj_frame.columnconfigure(1,weight=10)
-        self.rowconfigure(0,weight=10)
-        self.Backtraj_frame.rowconfigure(0,weight=1)
-        self.Backtraj_frame.rowconfigure(1,weight=1)
-        self.Backtraj_frame.rowconfigure(2,weight=1)
-        self.Backtraj_frame.rowconfigure(3,weight=10)
-        self.Backtraj_frame.rowconfigure(4,weight=10)
-
-        self.exist_file()
-
-    def on_clear(self):
-        self.text.configure(state=NORMAL)
-        self.text.delete(1.0,END)
-        self.text.configure(state=DISABLED)
-
-    def checkParam(self):
-        dirOutput       = self.param["dirOutput"]
-        HysplitExec     = self.param["dirHysplit"]+os.sep+"exec"+os.sep+"hyts_std"
-        dirHysplit      = self.param["dirHysplit"]+os.sep+"working"+os.sep
-        dirGDAS         = self.param["dirGDAS"]+os.sep
-        CONTROL         = dirHysplit+"CONTROL"
-
-        if not os.path.exists(dirGDAS):
-            showerror("Error","The path for the GDAS file can not be found...")
-            return (0, 0)
-        if not os.path.exists(dirHysplit) or not os.path.exists(HysplitExec):
-            showerror("Error","The Hysplit directory or the 'hyts_std' command do not exist...")
-            return (0,0)
-        if os.path.exists(dirOutput)==False:
-            if sys.version_info.major >= 3:
-                a=str(input("The output directory does not exist. Make one? ([y],n) "))
-            else:
-                a=str(raw_input("The output directory does not exist. Make one? ([y],n) "))
-            if a=="y" or a=="Y" or a=="" or a=="yes":
-                os.makedirs(dirOutput)
-            else:
-                showerror("Error","Script exit")
-                return (0,0)
-        return (1, self.param["cpu"])
-
-    def on_save(self):
-        with open('parameters'+os.sep+'localParamBackTraj_tmp.json', 'w') as fileSave:
-            try:
-                paramNew = {"dirGDAS": self.dirGDAS.get(),
-                            "dirHysplit": self.dirHysplit.get(),
-                            "dirOutput": self.dirOutput.get(),
-                            "lat": self.lat.get(),
-                            "lon": self.lon.get(),
-                            "alt": self.alt.get(),
-                            "station": self.station.get(),
-                            "hBT": self.hBT.get(),
-                            "cpu": self.cpu.get(),
-                            "stepHH": self.stepHH.get(),
-                            "date": [self.YY.get(), self.MM.get(), self.DD.get(), self.HH.get()],
-                            "dateEnd": [self.YYend.get(), self.MMend.get(), self.DDend.get(), self.HHend.get()]}
-            except (ValueError, SyntaxError):
-                os.remove('parameters'+os.sep+'localParamBackTraj_tmp.json')
-                showinfo("""Error""", """There is a problem somewhere... Probably a typo. The 'localParamBackTraj.json' file is not updated due to this problem.""")
-                return 0
-
-            json.dump(paramNew, fileSave, indent=4)
-        shutil.copy('parameters'+os.sep+'localParamBackTraj_tmp.json', 'parameters'+os.sep+'localParamBackTraj.json')
-        os.remove('parameters'+os.sep+'localParamBackTraj_tmp.json')
-        # update the "param" dict.
-        self.param=paramNew
-        return 1
-
-    def station_callback(self, event):
-        self.lat.set(self.locStation[self.station.get()][0])
-        self.lon.set(self.locStation[self.station.get()][1])
-        self.dirOutput.set(os.path.normpath(self.dirOutput.get()+os.sep+'..'+os.sep+self.station.get())+os.sep)
-        self.exist_file()
-
-    def exist_file(self):
-        if not os.path.exists(self.dirOutput.get()):
-            self.dirOutputSelect.dir_entry.config(foreground='red')
-        else:
-            self.dirOutputSelect.dir_entry.config(foreground='black')
-
-class PSCFTab(Frame):
-    def __init__(self,parent):
-        if sys.version_info.major>=3:
-            super().__init__(parent)
-        else:
-            Frame.__init__(self,parent)
-
         # Import local Param from the JSON file
         with open('parameters'+os.sep+'localParamPSCF.json', 'r') as dataFile:
-            self.param=json.load(dataFile)
+            param=json.load(dataFile)
         with open('parameters'+os.sep+'locationStation.json', 'r') as dataFile:
             locStation=json.load(dataFile)
 
-        self.PSCF_frame=LabelFrame(self,
-                                  text="PSCF options")
-        self.PSCF_frame.grid(row=0,
-                             column=0,
-                             sticky=N+E+S+W)
+        self.grid(sticky=E+W+N+S)
+        self.buttonBox=Frame(self)
+        self.buttonBox.grid(row=0,
+                            columnspan=3,
+                            sticky=E+W)
+        self.about_button=Button(self.buttonBox,
+                                 text="About...",
+                                 image=ICONS['about'],
+                                 compound=LEFT,
+                                 command=self.on_about)
+        self.about_button.pack(side=LEFT, padx=5, pady=5)
+        self.run_button=Button(self.buttonBox,
+                               text="Run PSCF",
+                               image=ICONS['run'],
+                               compound=LEFT,
+                               width=15, # to avoid changing size when callback is called
+                               command=self.on_run)
+        self.run_button.pack(side=LEFT, padx=5, pady=5)
+        self.save_button=Button(self.buttonBox,
+                                 text="Save param",
+                                 image=ICONS['save'],
+                                 compound=LEFT,
+                                 command=self.on_save)
+        self.save_button.pack(side=LEFT, padx=5, pady=5)
+        self.exit_button=Button(self.buttonBox,
+                                text="Exit",
+                                image=ICONS['exit'],
+                                compound=LEFT,
+                                command=parent.destroy)
+        self.exit_button.pack(side=RIGHT, padx=5, pady=5)
 
-        # ===== Directory and concentration file ===============================
         self.dirBackTraj=StringVar()
-        self.dirBackTraj.set(self.param["dirBackTraj"])
-        self.dirBackTrajSelect=SelectDirectory(self.PSCF_frame, textvariable=self.dirBackTraj, title="Back-trajectory directory")
-        self.dirBackTrajSelect.grid(row=0, columnspan=3, sticky=E+W, padx=5)
+        self.dirBackTraj.set(param["dirBackTraj"])
+        self.dirBackTrajSelect=SelectDirectory(self, textvariable=self.dirBackTraj, title="Back-trajectory directory")
+        self.dirBackTrajSelect.grid(row=1, columnspan=3, sticky=E+W, padx=5)
 
         self.Cfile=StringVar()
-        self.Cfile.set(self.param["Cfile"])
-        self.CfileSelect=SelectFile(self.PSCF_frame, textvariable=self.Cfile, title="Concentration file")
-        self.CfileSelect.grid(row=1, columnspan=3, sticky=E+W, padx=5)
+        self.Cfile.set(param["Cfile"])
+        self.CfileSelect=SelectFile(self, textvariable=self.Cfile, title="Concentration file")
+        self.CfileSelect.grid(row=2, columnspan=3, sticky=E+W, padx=5)
         
         # ============ Station Frame ===========================================
-        self.station_frame=LabelFrame(self.PSCF_frame,
+        self.station_frame=LabelFrame(self,
                                       text="Station")
-        self.station_frame.grid(row=2,
+        self.station_frame.grid(row=3,
                                column=0,
                                sticky=E+W+S+N,
                                 padx=5,
                                pady=5)
         # Station name
         self.station=StringVar()
-        self.station.set(self.param["station"])
+        self.station.set(param["station"])
         self.stationLabel=Label(self.station_frame, text="Station", justify=LEFT)
         self.stationLabel.grid(row=0, column=0, columnspan=2, sticky=W, padx=5, pady=5)
-        self.stationOptionMenu=OptionMenu(self.station_frame, self.station, self.param["station"], *locStation, command=self.station_callback)
+        self.stationOptionMenu=OptionMenu(self.station_frame, self.station, param["station"], *locStation, command=self.station_callback)
         self.stationOptionMenu.grid(row=0, column=2, sticky=W, padx=5, pady=5)
         self.stationOptionMenu.configure(width=6)
         # Prefix for the back-trajectory
         self.prefixTraj=StringVar()
-        self.prefixTraj.set(self.param["prefix"])
+        self.prefixTraj.set(param["prefix"])
         self.prefixTrajLabel=Label(self.station_frame, text="Back-traj prefix", justify=LEFT)
         self.prefixTrajLabel.grid(row=1, column=0, columnspan=2, sticky=W, padx=5, pady=5)
         self.prefixTrajEntry=EntryContext(self.station_frame, width=10, textvariable=self.prefixTraj)
         self.prefixTrajEntry.grid(row=1, column=2, sticky=W, padx=5, pady=5)
         # Ref point
         self.lon0=StringVar()
-        self.lon0.set(locStation[self.param["station"]][1])
+        self.lon0.set(locStation[param["station"]][1])
         self.lon0Label=Label(self.station_frame, text="Lon", justify=LEFT)
         self.lon0Label.grid(row=2, column=0, sticky=W, padx=5, pady=5)
         self.lon0Entry=EntryContext(self.station_frame, width=5, textvariable=self.lon0)
         self.lon0Entry.grid(row=2, column=1, sticky=W, padx=5, pady=5)
         self.lat0=StringVar()
-        self.lat0.set(locStation[self.param["station"]][0])
+        self.lat0.set(locStation[param["station"]][0])
         self.lat0Label=Label(self.station_frame, text="Lat", justify=LEFT)
         self.lat0Label.grid(row=3, column=0, sticky=W, padx=5, pady=5)
         self.lat0Entry=EntryContext(self.station_frame, width=5, textvariable=self.lat0)
         self.lat0Entry.grid(row=3, column=1, sticky=W, padx=5, pady=5)
         
         # ============== Back Traj Frame ========================
-        self.Backtraj_frame=LabelFrame(self.PSCF_frame,
+        self.backTraj_frame=LabelFrame(self,
                                       text="Back Trajectory")
-        self.Backtraj_frame.grid(row=2,
+        self.backTraj_frame.grid(row=3,
                                  column=1,
                                 sticky=E+W+S+N,
                                 padx=5,
                                 pady=5)
         # Back traj
         self.backTraj=IntVar()
-        self.backTraj.set(self.param["backTraj"])
-        self.backTrajLabel=Label(self.Backtraj_frame, text="Back-trajectory [h]", justify=LEFT)
+        self.backTraj.set(param["backTraj"])
+        self.backTrajLabel=Label(self.backTraj_frame, text="Back-trajectory [h]", justify=LEFT)
         self.backTrajLabel.grid(row=0, column=0, sticky=W, padx=5, pady=5)
-        self.backTrajEntry=EntryContext(self.Backtraj_frame, width=5, textvariable=self.backTraj)
+        self.backTrajEntry=EntryContext(self.backTraj_frame, width=5, textvariable=self.backTraj)
         self.backTrajEntry.grid(row=0, column=1, sticky=W, padx=5, pady=5)
         # Add hour
         self.add_hour=StringVar()
-        self.add_hour.set(self.param["add_hour"])
-        self.add_hourLabel=Label(self.Backtraj_frame, text="Add hour", justify=LEFT)
+        self.add_hour.set(param["add_hour"])
+        self.add_hourLabel=Label(self.backTraj_frame, text="Add hour", justify=LEFT)
         self.add_hourLabel.grid(row=2, column=0, sticky=W, padx=5, pady=5)
-        self.add_hourEntry=EntryContext(self.Backtraj_frame, width=28, textvariable=self.add_hour, justify=LEFT)
+        self.add_hourEntry=EntryContext(self.backTraj_frame, width=28, textvariable=self.add_hour, justify=LEFT)
         self.add_hourEntry.grid(row=3, column=0, columnspan=2, sticky=W, padx=5, pady=5)
         # Cut with rain
         self.rainBool=BooleanVar()
-        self.rainBool.set(self.param["rainBool"])
-        self.rainBoolCheck=Checkbutton(self.Backtraj_frame, text="Cut when it's raining", variable=self.rainBool)
+        self.rainBool.set(param["rainBool"])
+        self.rainBoolCheck=Checkbutton(self.backTraj_frame, text="Cut when it's raining", variable=self.rainBool)
         self.rainBoolCheck.grid(row=4, column=0, sticky=W, padx=5, pady=5)
 
         # ============== Weighting Function Frame ========================
-        self.wf_frame=LabelFrame(self.PSCF_frame,
+        self.wf_frame=LabelFrame(self,
                                 text="Weighting function")
-        self.wf_frame.grid(row=2,
+        self.wf_frame.grid(row=3,
                           column=2,
                           sticky=E+W+S+N,
                           padx=5,
                           pady=5)
         #Weighting function
         self.weigthingFunction=BooleanVar()
-        self.weigthingFunction.set(self.param["wF"])
+        self.weigthingFunction.set(param["wF"])
         self.weigthingFunctionCheck=Checkbutton(self.wf_frame, text="Use the weighting function", variable=self.weigthingFunction, command=self.wf_callback)
         self.weigthingFunctionCheck.grid(row=0, column=0, sticky=W, padx=5, pady=5)
         
         self.wf_manual=BooleanVar()
-        self.wf_manual.set(self.param["wFmanual"])
+        self.wf_manual.set(param["wFmanual"])
         manualChoice = ("Auto", "User defined")[self.wf_manual.get()]
         self.varChoiceManual = StringVar(self.wf_frame)
         self.varChoiceManual.set(manualChoice)
@@ -863,19 +409,19 @@ class PSCFTab(Frame):
         self.wFbox3=Frame(self.wf_frame_manual_choice)
         self.wFbox3.grid(row=4, column=0, padx=5, sticky=E)
         self.wFlim0=StringVar()
-        self.wFlim0.set(self.param["wFlim"][0])
+        self.wFlim0.set(param["wFlim"][0])
         self.wFlim1=StringVar()
-        self.wFlim1.set(self.param["wFlim"][1])
+        self.wFlim1.set(param["wFlim"][1])
         self.wFlim2=StringVar()
-        self.wFlim2.set(self.param["wFlim"][2])
+        self.wFlim2.set(param["wFlim"][2])
         self.wFval0=StringVar()
-        self.wFval0.set(self.param["wFval"][0])
+        self.wFval0.set(param["wFval"][0])
         self.wFval1=StringVar()
-        self.wFval1.set(self.param["wFval"][1])
+        self.wFval1.set(param["wFval"][1])
         self.wFval2=StringVar()
-        self.wFval2.set(self.param["wFval"][2])
+        self.wFval2.set(param["wFval"][2])
         self.wFval3=StringVar()
-        self.wFval3.set(self.param["wFval"][3])
+        self.wFval3.set(param["wFval"][3])
 
         self.wFlim0Label=Label(self.wFbox0, text="d < ", justify=LEFT).pack(side=LEFT)
         self.wFlim0Entry=EntryContext(self.wFbox0, width=5, textvariable=self.wFlim0).pack(side=LEFT)
@@ -901,16 +447,16 @@ class PSCFTab(Frame):
 
 
         # =======================  Species to Study ============================
-        self.specie_frame=LabelFrame(self.PSCF_frame,
+        self.specie_frame=LabelFrame(self,
                                     text="Species")
-        self.specie_frame.grid(row=3,
+        self.specie_frame.grid(row=4,
                                column=0,
                                columnspan=2,
                                sticky=E+W+S+N,
                                padx=5,
                                pady=5)
         self.species=StringVar()
-        allSpecies = ";".join(self.param["species"])
+        allSpecies = ";".join(param["species"])
         self.species.set(allSpecies)
         self.speciesLabel=Label(self.specie_frame, text="Specie(s) to study", justify=LEFT)
         self.speciesLabel.grid(row=0, column=0, sticky=W, padx=5, pady=5)
@@ -918,28 +464,28 @@ class PSCFTab(Frame):
         self.speciesEntry.grid(row=0, column=1, sticky=W, padx=5, pady=5)
         # Choice percentile/threshold
         self.percentileBool=BooleanVar()
-        self.percentileBool.set(self.param["percentileBool"])
+        self.percentileBool.set(param["percentileBool"])
         self.percentileBoolCheck=Checkbutton(self.specie_frame, text="Use the Xth percentile as threshold. If not check, use the threshold.", variable=self.percentileBool, command=self.percentile_callback)
         self.percentileBoolCheck.grid(row=1, column=0, columnspan=60, sticky=W, padx=5, pady=5)
         # Percentile
         self.percentileLabel=Label(self.specie_frame, text="Percentile", justify=LEFT)
         self.percentileLabel.grid(row=2, column=0, sticky=W, padx=5, pady=5)
         self.percentile=StringVar()
-        self.percentile.set(self.param["percentile"])
+        self.percentile.set(param["percentile"])
         self.percentileEntry=EntryContext(self.specie_frame, width=30, textvariable=self.percentile)
         self.percentileEntry.grid(row=2, column=1, sticky=W, padx=5, pady=5)
         # threshold
         self.threshold=StringVar()
-        self.threshold.set(self.param["threshold"])
+        self.threshold.set(param["threshold"])
         self.thresholdLabel=Label(self.specie_frame, text="Threshold", justify=LEFT)
         self.thresholdLabel.grid(row=3, column=0, sticky=W, padx=5, pady=5)
         self.thresholdEntry=EntryContext(self.specie_frame, width=30, textvariable=self.threshold)
         self.thresholdEntry.grid(row=3, column=1, sticky=W, padx=5, pady=5)
 
         # ===== Time frame                          ===========================
-        self.time_frame=LabelFrame(self.PSCF_frame,
+        self.time_frame=LabelFrame(self,
                                   text="Date")
-        self.time_frame.grid(row=3,
+        self.time_frame.grid(row=4,
                              column=2,
                              sticky=E+W+S+N,
                              padx=5,
@@ -953,15 +499,15 @@ class PSCFTab(Frame):
         self.buttonMin=Frame(self.time_frame)
         self.buttonMin.grid(row=1, column=1, sticky=W+E+S+N, padx=5, pady=5)
         self.YYmin=StringVar()
-        self.YYmin.set(self.param["dateMin"][0])
+        self.YYmin.set(param["dateMin"][0])
         self.YYminLabel=Label(self.buttonMin, text="YYYY:", justify=LEFT).pack(side=LEFT)
         self.YYminEntry=EntryContext(self.buttonMin, width=5, textvariable=self.YYmin).pack(side=LEFT)
         self.MMmin=StringVar()
-        self.MMmin.set(self.param["dateMin"][1])
+        self.MMmin.set(param["dateMin"][1])
         self.MMminLabel=Label(self.buttonMin, text="MM:", justify=LEFT).pack(side=LEFT)
         self.MMminEntry=EntryContext(self.buttonMin, width=5, textvariable=self.MMmin).pack(side=LEFT)
         self.DDmin=StringVar()
-        self.DDmin.set(self.param["dateMin"][2])
+        self.DDmin.set(param["dateMin"][2])
         self.DDminLabel=Label(self.buttonMin, text="DD:", justify=LEFT).pack(side=LEFT)
         self.DDminEntry=EntryContext(self.buttonMin, width=5, textvariable=self.DDmin).pack(side=LEFT)
         # End time
@@ -972,22 +518,22 @@ class PSCFTab(Frame):
         self.buttonMax=Frame(self.time_frame)
         self.buttonMax.grid(row=2, column=1, sticky=W+E, padx=5, pady=5)
         self.YYmax=StringVar()
-        self.YYmax.set(self.param["dateMax"][0])
+        self.YYmax.set(param["dateMax"][0])
         self.YYmaxLabel=Label(self.buttonMax, text="YYYY:", justify=LEFT).pack(side=LEFT)
         self.YYmaxEntry=EntryContext(self.buttonMax, width=5, textvariable=self.YYmax).pack(side=LEFT)
         self.MMmax=StringVar()
-        self.MMmax.set(self.param["dateMax"][1])
+        self.MMmax.set(param["dateMax"][1])
         self.MMmaxLabel=Label(self.buttonMax, text="MM:", justify=LEFT).pack(side=LEFT)
         self.MMmaxEntry=EntryContext(self.buttonMax, width=5, textvariable=self.MMmax).pack(side=LEFT)
         self.DDmax=StringVar()
-        self.DDmax.set(self.param["dateMax"][2])
+        self.DDmax.set(param["dateMax"][2])
         self.DDmaxLabel=Label(self.buttonMax, text="DD:", justify=LEFT).pack(side=LEFT)
         self.DDmaxEntry=EntryContext(self.buttonMax, width=5, textvariable=self.DDmax).pack(side=LEFT)
 
         # ==================== Miscellaneous ==================================
-        self.BT_frame=LabelFrame(self.PSCF_frame,
+        self.BT_frame=LabelFrame(self,
                                 text="Miscallaneous")
-        self.BT_frame.grid(row=4,
+        self.BT_frame.grid(row=5,
                           column=0,
                            columnspan=3,
                           sticky=E+W+S+N,
@@ -1000,10 +546,10 @@ class PSCFTab(Frame):
         self.LatMax=StringVar()
         self.LonMin=StringVar()
         self.LonMax=StringVar()
-        self.LatMin.set(self.param["LatMin"])
-        self.LatMax.set(self.param["LatMax"])
-        self.LonMin.set(self.param["LonMin"])
-        self.LonMax.set(self.param["LonMax"])
+        self.LatMin.set(param["LatMin"])
+        self.LatMax.set(param["LatMax"])
+        self.LonMin.set(param["LonMin"])
+        self.LonMax.set(param["LonMax"])
         self.areaLonMinLabel=Label(self.areaPack, text='Lon min', justify=LEFT).pack(side=LEFT)
         self.areaLonMinEntry=EntryContext(self.areaPack, width=5, textvariable=self.LonMin).pack(side=LEFT)
         self.areaLonMaxLabel=Label(self.areaPack, text='Lon max', justify=LEFT).pack(side=LEFT)
@@ -1014,73 +560,57 @@ class PSCFTab(Frame):
         self.areaLatMaxEntry=EntryContext(self.areaPack, width=5, textvariable=self.LatMax).pack(side=LEFT)
 
         self.plotBT=BooleanVar()
-        self.plotBT.set(self.param["plotBT"])
+        self.plotBT.set(param["plotBT"])
         self.plotBTCheck=Checkbutton(self.BT_frame, text="Plot the back-traj", variable=self.plotBT)
         self.plotBTCheck.grid(row=1, column=0, sticky=W, padx=5, pady=5)
         self.polarPlot=BooleanVar()
-        self.polarPlot.set(self.param["polarPlot"])
+        self.polarPlot.set(param["polarPlot"])
         self.polarPlotCheck=Checkbutton(self.BT_frame, text="Plot the polar plot", variable=self.polarPlot)
         self.polarPlotCheck.grid(row=1, column=1, sticky=W, padx=5, pady=5)
         self.smooth=BooleanVar()
-        self.smooth.set(self.param["smooth"])
+        self.smooth.set(param["smooth"])
         self.smoothCheck=Checkbutton(self.BT_frame, text="Smooth the result", variable=self.smooth)
         self.smoothCheck.grid(row=1, column=2, sticky=W, padx=5, pady=5)
         self.resolutionLabel=Label(self.BT_frame, text="Background resolution", justify=LEFT)
         self.resolutionLabel.grid(row=1, column=3, sticky=W, padx=5, pady=5)
         self.resolutionQuality=StringVar()
-        self.resolutionQuality.set(self.param["resolutionQuality"])
-        self.resolutionQualityChoice=OptionMenu(self.BT_frame, self.resolutionQuality, self.param["resolutionQuality"], "crude", "low", "intermediate", "high", "full")
+        self.resolutionQuality.set(param["resolutionQuality"])
+        self.resolutionQualityChoice=OptionMenu(self.BT_frame, self.resolutionQuality, param["resolutionQuality"], "crude", "low", "intermediate", "high", "full")
         self.resolutionQualityChoice.grid(row=1, column=4, sticky=W, padx=5, pady=5)
 
-        # ===== First check ==========================================================
+        # First check
         self.wf_callback(self.wf_frame)
         self.percentile_callback()
         self.exist_file()
 
-        # ===== column config ========================================================
+
         self.columnconfigure(0,weight=10)
-        self.PSCF_frame.columnconfigure(0,weight=10)
-        self.PSCF_frame.columnconfigure(1,weight=10)
-        self.PSCF_frame.columnconfigure(2,weight=10)
+        self.columnconfigure(1,weight=10)
+        self.columnconfigure(2,weight=10)
         self.rowconfigure(0,weight=10)
-        self.PSCF_frame.rowconfigure(0,weight=10)
-        self.PSCF_frame.rowconfigure(1,weight=10)
-        self.PSCF_frame.rowconfigure(2,weight=10)
-        self.PSCF_frame.rowconfigure(3,weight=10)
-        self.PSCF_frame.rowconfigure(4,weight=10)
+        self.rowconfigure(1,weight=10)
+        self.rowconfigure(2,weight=10)
+        self.rowconfigure(3,weight=10)
+        self.rowconfigure(4,weight=10)
+        self.rowconfigure(5,weight=10)
+        # this allows using the mouse wheel even on the disabled Text widget
+        # without the need to clic on said widget
+        self.tk_focusFollowsMouse()
 
-    def check_param(self):
-        errorCode = self.on_save()
-        if errorCode==0:
-            return 1
-        threshold=json2arr(self.param["threshold"], np.float64)
-        percentile=json2arr(self.param["percentile"], np.float64)
-        # Check Path
-        if not os.path.exists(self.param["dirBackTraj"]):
-            showinfo("""Error""", """The back traj directory does not exist""")
-            return 0
-        if not os.path.exists(self.param["Cfile"]):
-            showinfo("""Error""", """The concentration file does not exist""")
-            return 0
-        # Check wf
-        # TODO
-        # Check Species
-        for specie in self.param["species"]:
-            sp  = specie2study(self.param["Cfile"], specie)
-            if sp == -999:
-                header=np.genfromtxt(self.param["Cfile"], delimiter=';', max_rows=1, dtype=str)
-                text="The specie \""+specie+"\" is not found in the concentration file.\n\nPossible species are:\n"+ ", ".join(list(header[1:]))
-                showinfo("""Error""",text) 
-                return 0
-        # Check length of parameter
-        if (len(self.param["species"]) != len(threshold)) and not self.param["percentileBool"] and (len(threshold) != 1):
-            showinfo("""Error""", """The number of specie and threshold must match or the threshold must be unique.""")
-            return 0
-        elif (len(self.param["species"]) != len(percentile)) and self.param["percentileBool"] and (len(percentile) != 1):
-            showinfo("""Error""", """The number of specie and percentile must match or the percentile must be unique.""")
-            return 0
 
-        return 1
+
+    def on_clear(self):
+        self.text.configure(state=NORMAL)
+        self.text.delete(1.0,END)
+        self.text.configure(state=DISABLED)
+
+    def on_about(self):
+        showinfo("About PSCF tools GUI","""This GUI is an adapted GUI from the game "The Battle For Westnoth", developed by Elvish_Hunter, 2014-2015, under the GNU GPL v2 license.
+
+Original PSCF script: Jean-Eudes PETIT
+New PSCF script and GUI tools : Samuel WEBER.
+
+Icons are taken from the Tango Desktop Project (http://tango.freedesktop.org), and are released in the Public Domain""")
 
     def on_save(self):
         with open('parameters'+os.sep+'localParamPSCF_tmp.json', 'w') as fileSave:
@@ -1120,8 +650,52 @@ class PSCFTab(Frame):
         shutil.copy('parameters'+os.sep+'localParamPSCF_tmp.json', 'parameters'+os.sep+'localParamPSCF.json')
         os.remove('parameters'+os.sep+'localParamPSCF_tmp.json')
         # update the "param" dict.
-        self.param=paramNew
+        with open('parameters'+os.sep+'localParamPSCF.json', 'r') as dataFile:
+            param=json.load(dataFile)
         return 1
+
+    def on_run(self):
+        # check
+        self.check_param()
+        with open('parameters'+os.sep+'localParamPSCF.json', 'r') as dataFile:
+            param=json.load(dataFile)
+        # Run PSCF
+        print("PSCF starts... Please wait.")
+        for specie in range(len(param["species"])):
+            p = Process(target=PSCF, args=(specie,))
+            p.start()
+    
+    def check_param(self):
+        errorCode = self.on_save()
+        if errorCode==0:
+            return
+        with open('parameters'+os.sep+'localParamPSCF.json', 'r') as dataFile:
+            param=json.load(dataFile)
+        threshold=json2arr(param["threshold"], np.float64)
+        percentile=json2arr(param["percentile"], np.float64)
+        # Check Path
+        if not os.path.exists(param["dirBackTraj"]):
+            showinfo("""Error""", """The back traj directory does not exist""")
+            return
+        if not os.path.exists(param["Cfile"]):
+            showinfo("""Error""", """The concentration file does not exist""")
+            return
+        # Check wf
+        # TODO
+        # Check Species
+        for specie in param["species"]:
+            sp  = specie2study(param["Cfile"], specie)
+            if sp == -999:
+                showinfo("""Error""", """The specie """ + "\"" + specie + """\" is not found in the concentration file.""")
+                return
+        # Check length of parameter
+        if (len(param["species"]) != len(threshold)) and not param["percentileBool"] and (len(threshold) != 1):
+            showinfo("""Error""", """The number of specie and threshold must match or the threshold must be unique.""")
+            return
+        elif (len(param["species"]) != len(percentile)) and param["percentileBool"] and (len(percentile) != 1):
+            showinfo("""Error""", """The number of specie and percentile must match or the percentile must be unique.""")
+            return
+
 
     def setState(self, widget, state='disabled'):
         try:
@@ -1130,7 +704,7 @@ class PSCFTab(Frame):
             pass
         for child in widget.winfo_children():
             self.setState(child, state=state)
-
+    
     def wf_callback(self, *arg):
         if self.weigthingFunction.get():
             self.wf_manual_callback(self.wf_frame_manual_choice)
@@ -1163,7 +737,7 @@ class PSCFTab(Frame):
         self.Cfile.set(os.path.dirname(self.Cfile.get())+os.sep+self.station.get()+'.csv')
         self.dirBackTraj.set(os.path.normpath(self.dirBackTraj.get()+os.sep+'..'+os.sep+self.station.get())+os.sep)
         self.exist_file()
-
+        
     def exist_file(self):
         if not os.path.exists(self.dirBackTraj.get()):
             self.dirBackTrajSelect.dir_entry.config(foreground='red')
@@ -1173,182 +747,6 @@ class PSCFTab(Frame):
             self.CfileSelect.dir_entry.config(foreground='red')
         else:
             self.CfileSelect.dir_entry.config(foreground='black')
-
-class aboutTab(Frame):
-    def __init__(self,parent):
-        if sys.version_info.major>=3:
-            super().__init__(parent)
-        else:
-            Frame.__init__(self,parent)
-        
-        self.text_frame=LabelFrame(self,
-                                  text="About this GUI")
-        self.text_frame.grid(row=0,
-                            column=0,
-                            sticky=N+E+S+W)
-
-        data = """This GUI is an adapted GUI from the game "The Battle For Westnoth", developed by Elvish_Hunter, 2014-2015,\n under the GNU GPL v2 license.\n
-Original PSCF script: Jean-Eudes PETIT \n
-New PSCF script and GUI tools : Samuel WEBER\n
-Icons are taken from the Tango Desktop Project (http://tango.freedesktop.org) and are released in the Public Domain."""
-        text = Label(self.text_frame, text=data)
-        text.grid(row=0,
-                 column=0,
-                 sticky=N+E+S+W)
-
-        # use a proportional font to handle spaces correctly
-        text.config(font=('Arial', 12))
-
-        self.columnconfigure(0,weight=10)
-        self.text_frame.columnconfigure(0, weight=10)
-
-class MainFrame(Frame):
-    def __init__(self,parent):
-        self.parent=parent
-        if sys.version_info.major>=3:
-            super().__init__(parent)
-        else:
-            Frame.__init__(self,parent)
-
-        self.grid(sticky=N+E+S+W)
-
-        self.buttonBox=Frame(self)
-        self.buttonBox.grid(row=0,
-                            column=0,
-                            sticky=E+W)
-        self.run_button=Button(self.buttonBox,
-                               text="Run PSCF",
-                               image=ICONS['run'],
-                               compound=LEFT,
-                               width=15, # to avoid changing size when callback is called
-                               command=self.on_run_PSCF)
-        self.run_button.pack(side=LEFT, padx=5, pady=5)
-        self.save_button=Button(self.buttonBox,
-                                 text="Save param",
-                                 image=ICONS['save'],
-                                 compound=LEFT,
-                                 command=self.on_save)
-        self.save_button.pack(side=LEFT, padx=5, pady=5)
-        self.exit_button=Button(self.buttonBox,
-                                text="Exit",
-                                image=ICONS['exit'],
-                                compound=LEFT,
-                                command=parent.destroy)
-        self.exit_button.pack(side=RIGHT, padx=5, pady=5)
-
-
-        # ===== NoteBook =========================================================
-        self.notebook=Notebook(self)
-        self.notebook.grid(row=1,
-                          column=0,
-                          sticky=E+W)
-        # BackTraj calculation
-        self.backtraj_tab=BacktrajTab(None)
-        self.notebook.add(self.backtraj_tab,
-                         text="Back-Trajectory",
-                         sticky=N+E+S+W)
-        # PSCF
-        self.PSCF_tab=PSCFTab(None)
-        self.notebook.add(self.PSCF_tab,
-                         text="PSCF",
-                         sticky=N+E+S+W)
-        # Output
-        self.output_tab=TextoutputTab(None)
-        self.notebook.add(self.output_tab,
-                         text="Output",
-                         sticky=N+E+S+W)
-
-        # Station param
-        self.station_tab=StationTab(None)
-        self.notebook.add(self.station_tab,
-                          text="Stations param.",
-                          sticky=N+E+S+W)
-        # Info & about
-        self.about_tab=aboutTab(None)
-        self.notebook.add(self.about_tab,
-                         text="About",
-                         sticky=N+E+S+W)
-
-        # ===== Text =============================================================
-        #self.text = tkst.ScrolledText(self,
-        #                             wrap="word",
-        #                              width  = 200,
-        #                              height = 10)
-        #self.text.grid(row=2,
-        #               column=0,
-        #              sticky=N+E+S+W)
-        #self.text.tag_configure("stderr", foreground="#b22222")
-
-
-        self.columnconfigure(0,weight=10)
-        self.rowconfigure(0,weight=10)
-        self.rowconfigure(1,weight=10)
-        self.rowconfigure(2,weight=10)
-
-        # this allows using the mouse wheel even on the disabled Text widget
-        # without the need to clic on said widget
-        self.tk_focusFollowsMouse()
-        
-        self.notebook.bind("<<NotebookTabChanged>>",self.tab_callback)
-
-    def tab_callback(self,event):
-        # we check the ID of the active tab and ask its position
-        # the order of the tabs is pretty obvious
-        active_tab=self.notebook.index(self.notebook.select())
-        if active_tab==0:
-            self.run_button.configure(text="Run Back-traj",command=self.on_run_backtraj)
-            self.save_button.configure(text="Save BackTraj")
-        elif active_tab==1:
-            self.run_button.configure(text="Run PSCF",command=self.on_run_PSCF)
-            self.save_button.configure(text="Save PSCF")
-
-    def on_clear(self):
-        self.text.configure(state=NORMAL)
-        self.text.delete(1.0,END)
-        self.text.configure(state=DISABLED)
-
-    def on_save(self):
-        # we check the ID of the active tab and ask its position
-        # the order of the tabs is pretty obvious
-        active_tab=self.notebook.index(self.notebook.select())
-        if active_tab==0:
-            self.backtraj_tab.on_save()
-        elif active_tab==1:
-            self.PSCF_tab.on_save()
-
-    def on_run_PSCF(self):
-        errorCode = self.PSCF_tab.check_param()
-        if errorCode == 0:
-            return
-        # Run PSCF
-        with open('parameters'+os.sep+'localParamPSCF.json', 'r') as dataFile:
-            param=json.load(dataFile)
-        # change tab
-        self.notebook.select(2)
-        print("PSCF starts... Please wait.")
-        for specie in range(len(param["species"])):
-            print(specie)
-            p = Process(target=PSCF, args=(specie,))
-            p.start()
-
-    def on_run_backtraj(self):
-        # check
-        errorCode = self.backtraj_tab.on_save()
-        if errorCode==0:
-            return
-        errorCode, nbCPU  = self.backtraj_tab.checkParam()
-        if errorCode==0:
-            return
-        # change tab
-        self.notebook.select(2)
-        # Compute the Back Traj
-        for i in range(nbCPU):
-            p = Process(target=BT)
-            p.start()
-        # block until the last process finish
-        p.join()
-
-        showinfo("""Done!""", """The back-trajectory script is finish. See the terminal output if error was raised.""")
 
 if __name__ == '__main__':
     root=Tk()
@@ -1554,7 +952,7 @@ if __name__ == '__main__':
                }
 
 
-    ROOT_W,ROOT_H=900,640
+    ROOT_W,ROOT_H=820,560
     # the following string may be confusing, so here there's an explanation
     # Python supports two ways to perform string interpolation
     # the first one is the C-like style
@@ -1571,15 +969,7 @@ if __name__ == '__main__':
     style=Style()
     if sys.platform.startswith("linux") and "clam" in style.theme_names():
         style.theme_use("clam")
-
     app=MainFrame(root)
-
-    def redirector(inputStr):
-        app.output_tab.output_text.insert(INSERT, inputStr)
-    #Redirect stdout/stderr to text
-    sys.stdout.write = redirector
-    sys.stderr.write = redirector
-
     print("==== Welcome to the PSCF GUI ====")
     root.mainloop()
     sys.exit(0)
