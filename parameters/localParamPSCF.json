@@ -1,8 +1,8 @@
 {
-    "dirBackTraj": "/home/samuel/Documents/LGGE/PSCF/retrotrajectoires/LYON/",
-    "Cfile": "/home/samuel/Documents/LGGE/PSCF/concentrations/LYON.csv",
-    "station": "LYON",
-    "prefix": "traj_LYON_",
+    "dirBackTraj": "/home/samuel/Documents/IGE/PSCF/retrotrajectoires/OPE/",
+    "Cfile": "/home/samuel/Documents/IGE/PSCF/concentrations/OPE.csv",
+    "station": "OPE",
+    "prefix": "traj_OPE_",
     "backTraj": 72,
     "add_hour": "[-3, 0, 3, 6, 9, 12, 15]",
     "dateMin": [
@@ -16,7 +16,7 @@
         "15"
     ],
     "species": [
-        "NH4"
+        "Levo"
     ],
     "threshold": "[0.4]",
     "percentileBool": true,
