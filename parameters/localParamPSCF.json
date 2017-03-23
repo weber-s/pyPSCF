@@ -1,8 +1,8 @@
 {
-    "dirBackTraj": "/home/samuel/Documents/IGE/PSCF/retrotrajectoires/OPE/",
+    "dirBackTraj": "/home/samuel/Documents/IGE/PSCF/retrotrajectoires/VERNEUIL/",
     "Cfile": "/home/samuel/Documents/IGE/PSCF/concentrations/OPE.csv",
-    "station": "OPE",
-    "prefix": "traj_OPE_",
+    "station": "VERNEUIL",
+    "prefix": "traj_VERNEUIL_",
     "backTraj": 72,
     "add_hour": "[-3, 0, 3, 6, 9, 12, 15]",
     "dateMin": [
@@ -16,7 +16,7 @@
         "15"
     ],
     "species": [
-        "Levo"
+        "NH4"
     ],
     "threshold": "[0.4]",
     "percentileBool": true,

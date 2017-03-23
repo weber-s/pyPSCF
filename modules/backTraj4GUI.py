@@ -9,15 +9,17 @@ import shutil
 
 
 def BT():
-    """ Compute the back-trajectory according to the parameters in parameters/localParamBackTraj.json.
+    """
+    Compute the back-trajectory according to the parameters in parameters/localParamBackTraj.json.
     
-    It should be use only with GUI_backTrajectory.pyw otherwise the relative path won't be effective.
+    It should be use eithery with GUI.pyw otherwise or from the '../parameters'
+    dir, ortherwise the relative path won't be effective.
     """
 
     # ===== Load the parameters from the json file          ===================
     with open(os.path.normpath('parameters/localParamBackTraj.json'), 'r') as dataFile:
         param=json.load(dataFile)
-    YY,MM,DD,HH = param["date"][0],param["date"][1],param["date"][2],param["date"][3]
+    YY,MM,DD,HH = int(param["date"][0]),int(param["date"][1]),int(param["date"][2]),int(param["date"][3])
     YYend,MMend,DDend,HHend = int(param["dateEnd"][0]), int(param["dateEnd"][1]), int(param["dateEnd"][2]), int(param["dateEnd"][3])
     
     dirOutput       = param["dirOutput"]
@@ -177,7 +179,13 @@ def BT():
     #        fileout.write(lineout)
     return 1
 
+
 def BTconverter():
+    """
+    Depreciated.
+    Was used when the PSCF4GUI.py script didn't worked with hysplit format. Now
+    it's ok.
+    """
     #Convert the file for the PSCF
     with open(os.normpath('parameters/localParamBackTraj.json'), 'r') as dataFile:
         param=json.load(dataFile)

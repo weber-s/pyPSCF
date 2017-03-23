@@ -28,7 +28,7 @@ else: # we are on Python 2
     from ttk import *
 
 from modules.PSCF4GUI import PSCF, specie2study
-from modules.backTraj4GUI import *
+from modules.backTraj4GUI import BT
 
 def arr2json(arr):
     return json.dumps(arr.tolist())
@@ -630,7 +630,7 @@ class BacktrajTab(Frame):
         # step between 2 BT
         self.stepHH=StringVar()
         self.stepHH.set(self.param["stepHH"])
-        self.stepHHLabel=Label(self.bt_frame, text="Step between 2 end-points [h]", justify=LEFT)
+        self.stepHHLabel=Label(self.bt_frame, text="Step between 2 starting back-trajectories. [h]", justify=LEFT)
         self.stepHHLabel.grid(row=2, column=0, sticky=W, padx=5, pady=5)
         self.stepHHEntry=EntryContext(self.bt_frame, width=5, textvariable=self.stepHH)
         self.stepHHEntry.grid(row=2, column=1, sticky=W, padx=5, pady=5)

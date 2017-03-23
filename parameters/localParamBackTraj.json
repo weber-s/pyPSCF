@@ -1,24 +1,24 @@
 {
-    "lat": "48.53",
-    "dirGDAS": "/run/media/samuel/My Passport/GDAS1/",
+    "dirGDAS": "/run/media/samuel/My Passport/Sauvegardes instruments/GDAS1/",
+    "dirHysplit": "/home/samuel/Documents/IGE/hysplit/",
+    "dirOutput": "/home/samuel/Documents/IGE/PSCF/retrotrajectoires/VERNEUIL/",
+    "lat": "46.81777",
+    "lon": "2.605277",
+    "alt": "100",
+    "station": "VERNEUIL",
     "hBT": "-72",
-    "lon": "5.50",
-    "dirOutput": "/home/samuel/Documents/LGGE/PSCF/retrotrajectoires/OPE/",
     "cpu": 3,
-    "alt": "100.0",
+    "stepHH": "3",
     "date": [
         "13",
         "01",
         "01",
-        "00"
+        "15"
     ],
-    "dirHysplit": "/home/samuel/Documents/LGGE/hysplit/",
     "dateEnd": [
-        "15",
-        "10",
-        "01",
-        "00"
-    ],
-    "stepHH": "3",
-    "station": "OPE"
+        "13",
+        "12",
+        "20",
+        "15"
+    ]
 }
