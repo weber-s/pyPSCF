@@ -1,24 +1,24 @@
 {
     "dirGDAS": "/run/media/samuel/My Passport/Sauvegardes instruments/GDAS1/",
     "dirHysplit": "/home/samuel/Documents/IGE/hysplit/",
-    "dirOutput": "/home/samuel/Documents/IGE/PSCF/retrotrajectoires/VERNEUIL/",
-    "lat": "46.81777",
-    "lon": "2.605277",
+    "dirOutput": "/home/samuel/Documents/IGE/PSCF/retrotrajectoires/DIEULEFIT/",
+    "lat": "44.5241",
+    "lon": "5.06638",
     "alt": "100",
-    "station": "VERNEUIL",
+    "station": "DIEULEFIT",
     "hBT": "-72",
-    "cpu": 3,
+    "cpu": 1,
     "stepHH": "3",
     "date": [
         "13",
         "01",
-        "01",
+        "29",
         "15"
     ],
     "dateEnd": [
         "13",
         "12",
-        "20",
+        "15",
         "15"
     ]
 }

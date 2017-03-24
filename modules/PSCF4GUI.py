@@ -132,14 +132,14 @@ def PSCF(specie):
     # ===== Initialisation                      ===================================
     # ===== Parameters
     lat0, lon0, alt0 = locStation[param["station"]]
-    lon0 = float(lon0)
-    lat0 = float(lat0)
-    folder=param["dirBackTraj"]
-    prefix=param["prefix"]
-    add_hour=json2arr(param["add_hour"], np.float64)
-    resQuality = param["resolutionQuality"][0]
-    percentile=json2arr(param["percentile"], np.float64)
-    threshold=json2arr(param["threshold"], np.float64)
+    lon0             = float(lon0)
+    lat0             = float(lat0)
+    folder      = param["dirBackTraj"]
+    prefix      = param["prefix"]
+    add_hour    = json2arr(param["add_hour"], np.float64)
+    resQuality  = param["resolutionQuality"][0]
+    percentile  = json2arr(param["percentile"], np.float64)
+    threshold   = json2arr(param["threshold"], np.float64)
 
     # ===== date
     dateAll = np.genfromtxt(param["Cfile"], delimiter=';', skip_header=1, usecols=[0], dtype=str)
@@ -149,10 +149,10 @@ def PSCF(specie):
     concAll = np.genfromtxt(param["Cfile"], delimiter=';', skip_header=1, usecols=[sp]) # Concentration
     conc    = list()
     # date format "dd/mm/yyyy hh:mm"
-    dateMintmp=np.array([param["dateMin"][2]+"/"+param["dateMin"][1]+"/"+param["dateMin"][0]+" 00:00"])
-    dateMaxtmp=np.array([param["dateMax"][2]+"/"+param["dateMax"][1]+"/"+param["dateMax"][0]+" 00:00"])
-    dateMin=str2date(dateMintmp)
-    dateMax=str2date(dateMaxtmp)
+    dateMintmp  = np.array([param["dateMin"][2]+"/"+param["dateMin"][1]+"/"+param["dateMin"][0]+" 00:00"])
+    dateMaxtmp  = np.array([param["dateMax"][2]+"/"+param["dateMax"][1]+"/"+param["dateMax"][0]+" 00:00"])
+    dateMin     = str2date(dateMintmp)
+    dateMax     = str2date(dateMaxtmp)
     for i,d in enumerate(dateAll):
         if (d > dateMin) & (d < dateMax):
             date.append(d)
@@ -170,9 +170,9 @@ def PSCF(specie):
     
 
     # ===== Main loop, take the back traj       ===================================
-    backTraj=list()
-    n=np.array([[],[]])
-    m=np.array([[],[]])
+    backTraj = list()
+    n   = np.array([[],[]])
+    m   = np.array([[],[]])
     for d in range(len(date)):
         backTraj.append(makeBT(date[d], conc[d], list(), list(), list(), list()))
         # find all back traj for the date d
@@ -208,8 +208,8 @@ def PSCF(specie):
     lon = np.arange(param["LonMin"], param["LonMax"]+0.01, 0.5) #+0.1 in order to have the max in the array
     lat = np.arange(param["LatMin"], param["LatMax"]+0.01, 0.5)
     lon_map, lat_map = np.meshgrid(lon, lat)
-    ngrid=np.zeros((lat.size,lon.size))
-    mgrid=np.zeros((lat.size,lon.size))
+    ngrid = np.zeros((lat.size,lon.size))
+    mgrid = np.zeros((lat.size,lon.size))
     for d in range(len(date)):
         for bt in range(len(backTraj[d].coord)):
             tmp = unique2d(np.floor(backTraj[d].coord[bt]*2)/2)

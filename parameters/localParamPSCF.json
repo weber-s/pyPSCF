@@ -1,9 +1,9 @@
 {
     "dirBackTraj": "/home/samuel/Documents/IGE/PSCF/retrotrajectoires/VERNEUIL/",
-    "Cfile": "/home/samuel/Documents/IGE/PSCF/concentrations/OPE.csv",
+    "Cfile": "/home/samuel/Documents/IGE/PSCF/concentrations/VERNEUIL.csv",
     "station": "VERNEUIL",
     "prefix": "traj_VERNEUIL_",
-    "backTraj": 72,
+    "backTraj": 48,
     "add_hour": "[-3, 0, 3, 6, 9, 12, 15]",
     "dateMin": [
         "2012",
@@ -16,7 +16,7 @@
         "15"
     ],
     "species": [
-        "NH4"
+        "MSA"
     ],
     "threshold": "[0.4]",
     "percentileBool": true,
@@ -38,7 +38,7 @@
     "plotBT": false,
     "polarPlot": false,
     "resolutionQuality": "low",
-    "rainBool": false,
+    "rainBool": true,
     "LonMin": -25.0,
     "LonMax": 35.0,
     "LatMin": 32.5,
