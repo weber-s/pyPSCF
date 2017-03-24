@@ -1,28 +1,28 @@
 {
-    "dirBackTraj": "/home/samuel/Documents/IGE/PSCF/retrotrajectoires/VERNEUIL/",
-    "Cfile": "/home/samuel/Documents/IGE/PSCF/concentrations/VERNEUIL.csv",
-    "station": "VERNEUIL",
-    "prefix": "traj_VERNEUIL_",
-    "backTraj": 48,
+    "dirBackTraj": "/home/samuel/Documents/IGE/PSCF/retrotrajectoires/OPE/",
+    "Cfile": "/home/samuel/Documents/IGE/PSCF/concentrations/MSA/OPE.csv",
+    "station": "OPE",
+    "prefix": "traj_OPE_",
+    "backTraj": 72,
     "add_hour": "[-3, 0, 3, 6, 9, 12, 15]",
     "dateMin": [
-        "2012",
+        "2010",
         "01",
-        "20"
+        "01"
     ],
     "dateMax": [
-        "2015",
+        "2014",
         "11",
-        "15"
+        "01"
     ],
     "species": [
-        "MSA"
+        "Polyols"
     ],
     "threshold": "[0.4]",
     "percentileBool": true,
     "percentile": "[75]",
     "wF": true,
-    "wFmanual": false,
+    "wFmanual": true,
     "wFlim": [
         "0.30",
         "0.6",
@@ -38,7 +38,7 @@
     "plotBT": false,
     "polarPlot": false,
     "resolutionQuality": "low",
-    "rainBool": true,
+    "rainBool": false,
     "LonMin": -25.0,
     "LonMax": 35.0,
     "LatMin": 32.5,

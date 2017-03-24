@@ -1,24 +1,24 @@
 {
     "dirGDAS": "/run/media/samuel/My Passport/Sauvegardes instruments/GDAS1/",
     "dirHysplit": "/home/samuel/Documents/IGE/hysplit/",
-    "dirOutput": "/home/samuel/Documents/IGE/PSCF/retrotrajectoires/DIEULEFIT/",
-    "lat": "44.5241",
-    "lon": "5.06638",
+    "dirOutput": "/home/samuel/Documents/IGE/PSCF/retrotrajectoires/PEYRUSSE-VIEILLE/",
+    "lat": "43.6166",
+    "lon": "0.1833",
     "alt": "100",
-    "station": "DIEULEFIT",
+    "station": "PEYRUSSE-VIEILLE",
     "hBT": "-72",
-    "cpu": 1,
+    "cpu": 3,
     "stepHH": "3",
     "date": [
         "13",
         "01",
-        "29",
+        "11",
         "15"
     ],
     "dateEnd": [
         "13",
         "12",
-        "15",
+        "27",
         "15"
     ]
 }
