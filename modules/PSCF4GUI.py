@@ -11,6 +11,7 @@ import scipy.stats as sst
 import math
 from multiprocessing import Process
 import linecache
+import pandas as pd
 
 # tkinter modules
 if sys.version_info.major >= 3:
@@ -142,21 +143,16 @@ def PSCF(specie):
     threshold   = json2arr(param["threshold"], np.float64)
 
     # ===== date
-    dateAll = np.genfromtxt(param["Cfile"], delimiter=';', skip_header=1, usecols=[0], dtype=str)
-    dateAll = str2date(dateAll)
-    date    = list()
-    sp      = specie2study(param["Cfile"], param["species"][specie])
-    concAll = np.genfromtxt(param["Cfile"], delimiter=';', skip_header=1, usecols=[sp]) # Concentration
-    conc    = list()
-    # date format "dd/mm/yyyy hh:mm"
-    dateMintmp  = np.array([param["dateMin"][2]+"/"+param["dateMin"][1]+"/"+param["dateMin"][0]+" 00:00"])
-    dateMaxtmp  = np.array([param["dateMax"][2]+"/"+param["dateMax"][1]+"/"+param["dateMax"][0]+" 00:00"])
-    dateMin     = str2date(dateMintmp)
-    dateMax     = str2date(dateMaxtmp)
-    for i,d in enumerate(dateAll):
-        if (d > dateMin) & (d < dateMax):
-            date.append(d)
-            conc.append(concAll[i])
+    data = pd.read_csv(param["Cfile"], index_col=0, parse_dates=["date"],
+                       delimiter=";")
+    # date format for the file "YYYY-MM-DD HH:MM"
+    dateMin = pd.Timestamp("-".join(param["dateMin"])).to_pydatetime()
+    dateMax = pd.Timestamp("-".join(param["dateMax"])).to_pydatetime()
+    data = data[data.index > dateMin]
+    data = data[data.index < dateMax]
+    # extract relevant info
+    date = data.index
+    conc = data[param["species"][specie]]
 
     # ===== concentration critic
     if param["percentileBool"]:
@@ -185,20 +181,26 @@ def PSCF(specie):
                 continue
             else:
                 # add the lon/lat of the BT
-                nb_lin_to_skip = linecache.getline(datafile, 1).split()
-                nb_lin_to_skip = int(nb_lin_to_skip[0])
-                rainfall_idx = linecache.getline(datafile, nb_lin_to_skip+4).split()
-                rainfall_col = rainfall_idx.index('RAINFALL')+11
+                nb_line_to_skip = linecache.getline(datafile, 1).split()
+                nb_line_to_skip = int(nb_line_to_skip[0])
+                meteo_idx = linecache.getline(datafile, nb_line_to_skip+4).split()
+                idx_names = ["a","b","year","month","day","hour","c","d","run","lat","lon","alt"]
+                idx_names = np.hstack((idx_names,meteo_idx[1:]))
 
-                lat   = np.genfromtxt(datafile, skip_header = nb_lin_to_skip+5, usecols=[9])[:param["backTraj"]]
-                lon   = np.genfromtxt(datafile, skip_header = nb_lin_to_skip+5, usecols=[10])[:param["backTraj"]]
-                #T     = np.genfromtxt(datafile, skip_header = nb_lin_to_skip+5, usecols=[rainfall_col-1])[:param["backTraj"]]
-                if param["rainBool"]:
-                    rain  = np.genfromtxt(datafile, skip_header = nb_lin_to_skip+5, usecols=[rainfall_col])[:param["backTraj"]]
-                #    backTraj[-1].rain.append(np.mean(rain).tolist())
-                    if np.mean(rain)!=-0: # if it was raining at least one time
-                        lat = lat[:np.where(rain!=0)[0][0]]
-                        lon = lon[:np.where(rain!=0)[0][0]]
+                traj = pd.read_table(datafile,
+                                     delim_whitespace=True,
+                                     header=None, names=idx_names,
+                                     skiprows=nb_line_to_skip+4,
+                                     nrows=param["backTraj"])
+                lat = traj["lat"]
+                lon = traj["lon"]
+                rain = traj["RAINFALL"]
+
+                if param["rainBool"] and np.mean(rain)!=0:
+                    # if it was raining at least one time
+                    idx_rain = np.where(rain!=0)[0][0]
+                    lat = lat[:idx_rain]
+                    lon = lon[:idx_rain]
 
                 #backTraj[-1].temp.append(np.min(T).tolist())
                 #print(backTraj[-1].temp)
@@ -338,10 +340,12 @@ def PSCF(specie):
 # where *args is an integer and refer to the specie in 'species' in 'localParamPSCF.json'.
 # If no arg is given, assume that the first specie in 'species' is wanted.
 if __name__ == '__main__':
-    if len(sys.argv)==1:
-        p=Process(target=PSCF, args=(0,))
-        p.start()
-    else:
-        for i in sys.argv[1:]:
-            p= Process(target=PSCF, args=(int(i),))
-            p.start()
+    plt.interactive(True)
+    PSCF(0)
+    #if len(sys.argv)==1:
+    #    p=Process(target=PSCF, args=(0,))
+    #    p.start()
+    #else:
+    #    for i in sys.argv[1:]:
+    #        p= Process(target=PSCF, args=(int(i),))
+    #        p.start()
