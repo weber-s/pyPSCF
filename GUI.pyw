@@ -264,7 +264,7 @@ class SelectDirectory(LabelFrame):
             # use os.path.normpath, so on Windows the usual backwards slashes are correctly shown
             self.textvariable.set(os.path.normpath(directory)+os.sep)
 
-        app.exist_file()
+        #app.exist_file()
 
     def on_clear(self):
         self.textvariable.set("")
@@ -487,7 +487,6 @@ class TextoutputTab(Frame):
                              sticky=N+E+S+W)
         self.output_text.tag_configure("stderr", foreground="#b22222")
 
-
 class BacktrajTab(Frame):
     def __init__(self,parent):
         if sys.version_info.major>=3:
@@ -671,8 +670,10 @@ class BacktrajTab(Frame):
         self.text.configure(state=DISABLED)
 
     def checkParam(self):
-        dirOutput       = self.param["dirOutput"]
+        dirOutput       = self.param["dirOutput"]+os.sep
         HysplitExec     = self.param["dirHysplit"]+os.sep+"exec"+os.sep+"hyts_std"
+        if sys.platform=="win32":
+            HysplitExec += ".exe"
         dirHysplit      = self.param["dirHysplit"]+os.sep+"working"+os.sep
         dirGDAS         = self.param["dirGDAS"]+os.sep
         CONTROL         = dirHysplit+"CONTROL"
@@ -680,8 +681,11 @@ class BacktrajTab(Frame):
         if not os.path.exists(dirGDAS):
             showerror("Error","The path for the GDAS file can not be found...")
             return (0, 0)
-        if not os.path.exists(dirHysplit) or not os.path.exists(HysplitExec):
-            showerror("Error","The Hysplit directory or the 'hyts_std' command do not exist...")
+        if not os.path.exists(dirHysplit):
+            showerror("Error","The Hysplit directory command do not exist...")
+            return (0,0)
+        if not os.path.exists(HysplitExec):
+            showerror("Error","The Hysplit 'hyts_std' command do not exist...")
             return (0,0)
         if os.path.exists(dirOutput)==False:
             if sys.version_info.major >= 3:

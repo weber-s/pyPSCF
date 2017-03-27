@@ -22,8 +22,10 @@ def BT():
     YY,MM,DD,HH = int(param["date"][0]),int(param["date"][1]),int(param["date"][2]),int(param["date"][3])
     YYend,MMend,DDend,HHend = int(param["dateEnd"][0]), int(param["dateEnd"][1]), int(param["dateEnd"][2]), int(param["dateEnd"][3])
     
-    dirOutput       = param["dirOutput"]
+    dirOutput       = param["dirOutput"]+os.sep
     HysplitExec     = param["dirHysplit"]+os.sep+"exec"+os.sep+"hyts_std"
+    if sys.platform=="win32":
+        HysplitExec += ".exe"
     dirHysplit      = param["dirHysplit"]+os.sep+"working"+os.sep
     dirGDAS         = param["dirGDAS"]+os.sep
     CONTROL         = dirHysplit+"CONTROL"
