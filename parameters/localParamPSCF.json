@@ -1,10 +1,10 @@
 {
-    "dirBackTraj": "/home/samuel/Documents/IGE/PSCF/retrotrajectoires/OPE/",
-    "Cfile": "/home/samuel/Documents/IGE/PSCF/concentrations/OPE.csv",
-    "station": "OPE",
-    "prefix": "traj_OPE_",
+    "dirBackTraj": "/home/samuel/Documents/IGE/PSCF/retrotrajectoires/PEYRUSSE-VIEILLE/",
+    "Cfile": "/home/samuel/Documents/IGE/PSCF/concentrations/MSA/PEYRUSSE-VIEILLE.csv",
+    "station": "PEYRUSSE-VIEILLE",
+    "prefix": "traj_PEYRUSSE-VIEILLE_",
     "backTraj": 72,
-    "add_hour": "[-3, 0, 3, 6, 9, 12, 15]",
+    "add_hour": "[-3, 0, 3, 6, 9, 12, 15, 18, 21]",
     "dateMin": [
         "2012",
         "01",
@@ -13,16 +13,15 @@
     "dateMax": [
         "2015",
         "11",
-        "15"
+        "30"
     ],
     "species": [
-        "Sea salt",
-        "muNH4agr"
+        "MSA"
     ],
     "threshold": "[0.4]",
     "percentileBool": true,
     "percentile": "[75]",
-    "wF": false,
+    "wF": true,
     "wFmanual": false,
     "wFlim": [
         "0.30",
