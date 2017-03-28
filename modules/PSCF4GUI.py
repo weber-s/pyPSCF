@@ -89,7 +89,7 @@ def PSCF(specie):
     The argument is the rank of the specie in the "species" in the 'localParamPSCF.json' file.
     If no argument is given, assume that there is only one specie and takes the first one.
     """
-
+    
     # ===== Plot event                          ===============================
     def onclick(event):
         """ Find the BT which pass through this cell"""
@@ -116,6 +116,7 @@ def PSCF(specie):
                             ax.plot(xx, yy, '-',color='0.75')#, marker='.')
                             print("date: %.10s | BT: %.13sh | [x]: %s"%(backTraj[i].global_date, backTraj[i].date[j], backTraj[i].conc))
             print("")
+            sys.stdout.flush()
             event.canvas.draw()
     
         if event.button == 3:

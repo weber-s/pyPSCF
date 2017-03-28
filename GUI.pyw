@@ -7,6 +7,7 @@ import shutil
 import numpy as np
 from ast import literal_eval
 from multiprocessing import *
+
 # sys.version_info checks the interpreter version
 # this is used to have a script that can run on both Python2 and Python3
 # not that useful until the mainline tools are updated, but still...
@@ -1331,7 +1332,6 @@ class MainFrame(Frame):
         self.notebook.select(2)
         print("PSCF starts... Please wait.")
         for specie in range(len(param["species"])):
-            print(specie)
             p = Process(target=PSCF, args=(specie,))
             p.start()
 
@@ -1582,7 +1582,7 @@ if __name__ == '__main__':
         app.output_tab.output_text.insert(INSERT, inputStr)
     #Redirect stdout/stderr to text
     sys.stdout.write = redirector
-    sys.stderr.write = redirector
+    #sys.stderr.write = redirector
 
     print("==== Welcome to the PSCF GUI ====")
     root.mainloop()
