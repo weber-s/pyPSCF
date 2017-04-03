@@ -72,12 +72,17 @@ def unique2d(a):
     idx = np.unique(b,return_index=True)[1]
     return a[:,idx]
 
-
 def arr2json(arr):
     return json.dumps(arr.tolist())
+
 def json2arr(astr,dtype):
     return np.fromiter(json.loads(astr),dtype)
 
+def toRad(x):
+    return x*math.pi/180
+
+def toDeg(x):
+    return x*180/math.pi
 
 # =============================================================================
 # =============================================================================
@@ -172,6 +177,7 @@ def PSCF(specie):
     m   = np.array([[],[]])
     for d in range(len(date)):
         backTraj.append(makeBT(date[d], conc[d], list(), list(), list(), list()))
+        # backTraj.append(BT(date[d], conc[d]))
         # find all back traj for the date d
         for i in range(add_hour.shape[0]):
             backTraj[-1].date.append(date[d]+dt.timedelta(hours=add_hour[i]))
@@ -262,77 +268,93 @@ def PSCF(specie):
     # ===== Plot Back Traj (log(n+1))       ===================================
     if param["plotBT"]:
         figBT=plt.figure()
-        m = Basemap(projection='merc', llcrnrlat=param["LatMin"], urcrnrlat=param["LatMax"], llcrnrlon=param["LonMin"], urcrnrlon=param["LonMax"], resolution=resQuality)#, lat_ts=49)
-        x_BT, y_BT = m(lon_map, lat_map)
-        m.drawcoastlines(color='black')
-        m.drawcountries(color='black')
-        x_station, y_station = m(lon0, lat0)
-        cs = m.pcolormesh(x_BT, y_BT, trajdensity, cmap='hot_r')
-        plt.title(param["station"]+'\nBack-traj probalility (log(n))')
-        m.plot(x_station, y_station, 'o', color='0.75')
+        mapBT = Basemap(projection='merc',
+                    llcrnrlat=param["LatMin"],
+                    urcrnrlat=param["LatMax"],
+                    llcrnrlon=param["LonMin"],
+                    urcrnrlon=param["LonMax"],
+                    resolution=resQuality)
+        x_BT, y_BT = mapBT(lon_map, lat_map)
+        x_station, y_station = mapBT(lon0, lat0)
+        cs = mapBT.pcolormesh(x_BT, y_BT, trajdensity, cmap='hot_r')
 
+        mapBT.drawcoastlines(color='black')
+        mapBT.drawcountries(color='black')
+        mapBT.plot(x_station, y_station, 'o', color='0.75')
+        plt.title(param["station"]+'\nBack-traj probalility (log(n))')
     
     # ===== Polar plot                      ===================================
     if param["polarPlot"]:
-        r=np.zeros((lat.size, lon.size))
-        phi=np.zeros((lat.size, lon.size))
-        for i in range(len(lat)):
-            for j in range(len(lon)):
-                deltaLon = (lon[j]-math.floor(lon0*2)/2)
-                deltaLat = (lat[i]-math.floor(lat0*2)/2)
-                r[i,j] = math.sqrt( deltaLon**2 + deltaLat**2)
-                phi[i,j] = math.atan2(deltaLat, deltaLon)
-        phi[ np.where(phi < 0) ] = phi[ np.where(phi < 0) ] + 2*math.pi
+        # change the coordinate system to polar from the station point
+        deltalon = lon0-lon
+        mesh_deltalon, mesh_lat = np.meshgrid(deltalon, lat)
+        mesh_lon, _ = np.meshgrid(lon, lat)
+        mesh_deltalon   = toRad(mesh_deltalon)
+        mesh_lon        = toRad(mesh_lon)
+        mesh_lat        = toRad(mesh_lat)
+
+        a = np.sin(mesh_deltalon) * np.cos(mesh_lat)     
+        b = np.cos(lat0*math.pi/180)*np.sin(mesh_lat) - np.sin(lat0*math.pi/180)*np.cos(mesh_lat)*np.cos(mesh_deltalon)
+        bearing = np.arctan2(a,b)
+        bearing += math.pi/2                        # change the origin: from N to E
+        bearing[np.where(bearing<0)] += 2*math.pi   # 
     
-        nPhi=[]
-        mPhi=[]
-        N=16
-        theta = np.arange(0,361,22.5)
-        theta = theta*math.pi/180
-        nPhi.append( np.sum(ngrid[ np.where( phi <= math.pi/8)]))
-        mPhi.append( np.sum(mgrid[ np.where( phi <= math.pi/8)]))
-        for i in range(1, N):
-            nPhi.append( np.sum( ngrid[ np.where( (theta[i-1]<phi) & (phi <= theta[i]) ) ] ) )
-            mPhi.append( np.sum( mgrid[ np.where( (theta[i-1]<phi) & (phi <= theta[i]) ) ] ) )
-        
+        # select and count the BT in a given Phi range 
+        mPhi=list()
+        theta = toRad(np.arange(0,361,22.5))
+        mPhi.append( np.sum(mgrid[ np.where( bearing <= theta[1])]))
+        for i in range(1, len(theta)-1):
+            mPhi.append(np.sum(mgrid[np.where((theta[i]<bearing) & (bearing <=theta[i+1]))]))
+        # convert it in percent
+        values = mPhi/np.sum(mgrid)*100
+
         # ===== Plot part
         figPolar=plt.figure()
         xticklabel=['E', 'NE', 'N', 'NO', 'O', 'SO', 'S', 'SE']
     
-        #axPolar = plt.subplot(121, projection='polar')
-        #plt.title('N grid')
-        #bars = axPolar.bar( theta[:-1], nPhi/np.sum(ngrid), width=math.pi/8)
-        #axPolar.xaxis.set_ticklabels(xticklabel)
-    
         axPolar = plt.subplot(111, projection='polar')
-        bars = axPolar.bar( theta[:-1], mPhi/np.sum(mgrid), width=math.pi/8)
+        bars = axPolar.bar( theta[:-1], values, width=math.pi/8, align="edge")
         axPolar.xaxis.set_ticklabels(xticklabel)
+        axPolar.yaxis.set_ticks(range(0,int(max(values)),5))
     
-        plotTitle=param["station"] + ', ' + param["species"][specie] + " > "+str(concCrit) + '\nFrom ' + min(date).strftime('%Y/%m/%d') + ' to ' + max(date).strftime('%Y/%m/%d')
+        plotTitle = str(param["station"] + ', '
+                    + param["species"][specie] + " > "+str(concCrit)
+                    +'\nFrom ' + min(date).strftime('%Y/%m/%d') 
+                    + ' to ' + max(date).strftime('%Y/%m/%d'))
         plt.title(plotTitle)
-        #figPolar.suptitle(plotTitle)
+        plt.subplots_adjust(top=0.85, bottom=0.05, left=0.07, right=0.93)
 
     # ===== Plot PSCF                       ===================================
     #print(PSCF.max())
-    fig=plt.figure()
-    ax = fig.add_subplot(111)
-    #traj = Basemap(projection='merc', llcrnrlat=37.5, urcrnrlat=61, llcrnrlon=-20, urcrnrlon=25, resolution=resQuality)#, lat_ts=49)
-    traj = Basemap(projection='merc', llcrnrlat=param["LatMin"], urcrnrlat=param["LatMax"], llcrnrlon=param["LonMin"], urcrnrlon=param["LonMax"], resolution=resQuality)#, lat_ts=49)
+    fig=plt.figure()  # keep handle for the onclick function
+    ax=plt.subplot(111)
+
+    traj = Basemap(projection='merc',
+                   llcrnrlat=param["LatMin"],
+                   urcrnrlat=param["LatMax"],
+                   llcrnrlon=param["LonMin"],
+                   urcrnrlon=param["LonMax"],
+                   resolution=resQuality)
     traj.drawcoastlines()
     traj.drawcountries()
     traj.drawmapboundary()
     
     x_map, y_map = traj(lon_map, lat_map)
-    pmesh=traj.pcolormesh(x_map, y_map, PSCF, cmap='hot_r')
+    pmesh        = traj.pcolormesh(x_map, y_map, PSCF, cmap='hot_r')
     
     x_station, y_station = traj(lon0, lat0)
     traj.plot(x_station, y_station, 'o', color='0.75')
-    plotTitle=param["station"] + ', ' + param["species"][specie] + " > "+str(concCrit) + '\nFrom ' + min(date).strftime('%Y/%m/%d') + ' to ' + max(date).strftime('%Y/%m/%d')
+    plotTitle = str(param["station"] + ', '
+                    + param["species"][specie] + " > "+str(concCrit)
+                    + '\nFrom ' + min(date).strftime('%Y/%m/%d')
+                    + ' to ' + max(date).strftime('%Y/%m/%d'))
     plt.title(plotTitle)
     #plt.colorbar()
         
     cid = fig.canvas.mpl_connect('button_press_event', onclick)
+    # plt.savefig("/run/media/samuel/USB DISK/PSCF_organique/"+param["station"]+"_"+param["species"][specie]+".png")
     plt.show()
+    # plt.close()
 
 
 # This part is only if you want to run this file via command line.
@@ -341,7 +363,7 @@ def PSCF(specie):
 # where *args is an integer and refer to the specie in 'species' in 'localParamPSCF.json'.
 # If no arg is given, assume that the first specie in 'species' is wanted.
 if __name__ == '__main__':
-    plt.interactive(True)
+    # plt.interactive(True)
     PSCF(0)
     #if len(sys.argv)==1:
     #    p=Process(target=PSCF, args=(0,))
