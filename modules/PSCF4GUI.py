@@ -34,6 +34,54 @@ class BT(object):
 def makeBT(globaldate, conc, date, coord, T, rain):
     return BT(globaldate, conc, date, coord, T, rain)
 
+def extractBackTraj(date, conc, add_hour, folder, prefix, run=72, rainBool=True):
+    """
+    Extract the back trajectories from their files to a new object.
+
+    return backTraj list
+    """
+    backTraj = list()
+    for d in range(len(date)):
+        backTraj.append(makeBT(date[d], conc[d], list(), list(), list(), list()))
+        # backTraj.append(BT(date[d], conc[d]))
+        # find all back traj for the date d
+        for i in range(add_hour.shape[0]):
+            backTraj[-1].date.append(date[d]+dt.timedelta(hours=add_hour[i]))
+            # open back traj file
+            datafile=folder+prefix+aammddhh(backTraj[-1].date[-1])
+            if not os.path.isfile(datafile):
+                print('Back-trajectory ' +prefix+aammddhh(backTraj[-1].date[-1])+ ' file is missing')
+                continue
+            else:
+                # add the lon/lat of the BT
+                nb_line_to_skip = linecache.getline(datafile, 1).split()
+                nb_line_to_skip = int(nb_line_to_skip[0])
+                meteo_idx = linecache.getline(datafile, nb_line_to_skip+4).split()
+                idx_names = ["a","b","year","month","day","hour","c","d","run","lat","lon","alt"]
+                idx_names = np.hstack((idx_names,meteo_idx[1:]))
+
+                traj = pd.read_table(datafile,
+                                     delim_whitespace=True,
+                                     header=None,
+                                     names=idx_names,
+                                     skiprows=nb_line_to_skip+4,
+                                     nrows=run)
+                lat = traj["lat"]
+                lon = traj["lon"]
+                rain = traj["RAINFALL"]
+
+                if rainBool and np.mean(rain)!=0:
+                    # if it was raining at least one time
+                    idx_rain = np.where(rain!=0)[0][0]
+                    lat = lat[:idx_rain]
+                    lon = lon[:idx_rain]
+
+                #backTraj[-1].temp.append(np.min(T).tolist())
+                #print(backTraj[-1].temp)
+                backTraj[-1].coord.append(np.array([lon, lat]))
+    return backTraj
+
+
 def str2date(strdate):
     # "31/10/2010 22:34"
     date=list()
@@ -170,48 +218,52 @@ def PSCF(specie):
             threshold=np.tile(threshold, len(param["species"])) # repeat the same threshold for all species
         concCrit = threshold[specie]
     
+    # ===== Extract all back-traj needed        ===================================
+    backTraj = extractBackTraj(date, conc, add_hour, folder, prefix,
+                               run=param["backTraj"],
+                               rainBool=param["rainBool"])
 
     # ===== Main loop, take the back traj       ===================================
-    backTraj = list()
-    n   = np.array([[],[]])
-    m   = np.array([[],[]])
-    for d in range(len(date)):
-        backTraj.append(makeBT(date[d], conc[d], list(), list(), list(), list()))
-        # backTraj.append(BT(date[d], conc[d]))
-        # find all back traj for the date d
-        for i in range(add_hour.shape[0]):
-            backTraj[-1].date.append(date[d]+dt.timedelta(hours=add_hour[i]))
-            # open back traj file
-            datafile=folder+prefix+aammddhh(backTraj[-1].date[-1])
-            if not os.path.isfile(datafile):
-                print('Back-trajectory ' +prefix+aammddhh(backTraj[-1].date[-1])+ ' file is missing')
-                continue
-            else:
-                # add the lon/lat of the BT
-                nb_line_to_skip = linecache.getline(datafile, 1).split()
-                nb_line_to_skip = int(nb_line_to_skip[0])
-                meteo_idx = linecache.getline(datafile, nb_line_to_skip+4).split()
-                idx_names = ["a","b","year","month","day","hour","c","d","run","lat","lon","alt"]
-                idx_names = np.hstack((idx_names,meteo_idx[1:]))
-
-                traj = pd.read_table(datafile,
-                                     delim_whitespace=True,
-                                     header=None, names=idx_names,
-                                     skiprows=nb_line_to_skip+4,
-                                     nrows=param["backTraj"])
-                lat = traj["lat"]
-                lon = traj["lon"]
-                rain = traj["RAINFALL"]
-
-                if param["rainBool"] and np.mean(rain)!=0:
-                    # if it was raining at least one time
-                    idx_rain = np.where(rain!=0)[0][0]
-                    lat = lat[:idx_rain]
-                    lon = lon[:idx_rain]
-
-                #backTraj[-1].temp.append(np.min(T).tolist())
-                #print(backTraj[-1].temp)
-                backTraj[-1].coord.append(np.array([lon, lat]))
+    # backTraj = list()
+    # n   = np.array([[],[]])
+    # m   = np.array([[],[]])
+    # for d in range(len(date)):
+    #     backTraj.append(makeBT(date[d], conc[d], list(), list(), list(), list()))
+    #     # backTraj.append(BT(date[d], conc[d]))
+    #     # find all back traj for the date d
+    #     for i in range(add_hour.shape[0]):
+    #         backTraj[-1].date.append(date[d]+dt.timedelta(hours=add_hour[i]))
+    #         # open back traj file
+    #         datafile=folder+prefix+aammddhh(backTraj[-1].date[-1])
+    #         if not os.path.isfile(datafile):
+    #             print('Back-trajectory ' +prefix+aammddhh(backTraj[-1].date[-1])+ ' file is missing')
+    #             continue
+    #         else:
+    #             # add the lon/lat of the BT
+    #             nb_line_to_skip = linecache.getline(datafile, 1).split()
+    #             nb_line_to_skip = int(nb_line_to_skip[0])
+    #             meteo_idx = linecache.getline(datafile, nb_line_to_skip+4).split()
+    #             idx_names = ["a","b","year","month","day","hour","c","d","run","lat","lon","alt"]
+    #             idx_names = np.hstack((idx_names,meteo_idx[1:]))
+    #
+    #             traj = pd.read_table(datafile,
+    #                                  delim_whitespace=True,
+    #                                  header=None, names=idx_names,
+    #                                  skiprows=nb_line_to_skip+4,
+    #                                  nrows=param["backTraj"])
+    #             lat = traj["lat"]
+    #             lon = traj["lon"]
+    #             rain = traj["RAINFALL"]
+    #
+    #             if param["rainBool"] and np.mean(rain)!=0:
+    #                 # if it was raining at least one time
+    #                 idx_rain = np.where(rain!=0)[0][0]
+    #                 lat = lat[:idx_rain]
+    #                 lon = lon[:idx_rain]
+    #
+    #             #backTraj[-1].temp.append(np.min(T).tolist())
+    #             #print(backTraj[-1].temp)
+    #             backTraj[-1].coord.append(np.array([lon, lat]))
 
     # ===== convert lon/lat to 0, 0.5, 1, etc
     lon = np.arange(param["LonMin"], param["LonMax"]+0.01, 0.5) #+0.1 in order to have the max in the array
