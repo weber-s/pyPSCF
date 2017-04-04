@@ -23,16 +23,14 @@ else:
 
 
 class BT(object):
-    def __init__(self, global_date=(), conc=0, date=list(), coord=list(), T=list(), rain=list()):
+    def __init__(self, global_date=(), conc=0, date=list(), coord=list()):
         self.global_date = global_date
         self.conc   = conc
         self.date   = date
         self.coord  = coord
-        self.temp   = T
-        self.rain   = rain
 
-def makeBT(globaldate, conc, date, coord, T, rain):
-    return BT(globaldate, conc, date, coord, T, rain)
+def makeBT(globaldate, conc, date, coord):
+    return BT(globaldate, conc, date, coord)
 
 def extractBackTraj(date, conc, add_hour, folder, prefix, run=72, rainBool=True):
     """
@@ -42,7 +40,7 @@ def extractBackTraj(date, conc, add_hour, folder, prefix, run=72, rainBool=True)
     """
     backTraj = list()
     for d in range(len(date)):
-        backTraj.append(makeBT(date[d], conc[d], list(), list(), list(), list()))
+        backTraj.append(makeBT(date[d], conc[d], list(), list()))
         # backTraj.append(BT(date[d], conc[d]))
         # find all back traj for the date d
         for i in range(add_hour.shape[0]):
@@ -136,7 +134,7 @@ def toDeg(x):
 # =============================================================================
 # =============================================================================
 # =============================================================================
-def PSCF(specie):
+def PSCF(specie, backTraj=None):
     """
     The main PSCF function. Compute the PSCF according to the parameters in 'localParamPSCF.json'.
     The argument is the rank of the specie in the "species" in the 'localParamPSCF.json' file.
@@ -219,9 +217,11 @@ def PSCF(specie):
         concCrit = threshold[specie]
     
     # ===== Extract all back-traj needed        ===================================
-    backTraj = extractBackTraj(date, conc, add_hour, folder, prefix,
-                               run=param["backTraj"],
-                               rainBool=param["rainBool"])
+    if backTraj is None:
+        backTraj = extractBackTraj(date, conc, add_hour, folder, prefix,
+                                   run=param["backTraj"],
+                                   rainBool=param["rainBool"])
+    return backTraj
 
     # ===== convert lon/lat to 0, 0.5, 1, etc
     lon = np.arange(param["LonMin"], param["LonMax"]+0.01, 0.5) #+0.1 in order to have the max in the array
