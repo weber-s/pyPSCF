@@ -22,29 +22,16 @@ else:
     from tkMessageBox import *
 
 
-class BT(object):
-    def __init__(self, global_date=(), conc=0, date=list(), coord=list()):
-        self.global_date = global_date
-        self.conc   = conc
-        self.date   = date
-        self.coord  = coord
-
-def makeBT(globaldate, conc, date, coord):
-    return BT(globaldate, conc, date, coord)
-
 def extractBackTraj(date, conc, add_hour, folder, prefix, run=72, rainBool=True):
     """
     Extract the back trajectories from their files to a new object.
 
     return backTraj list
     """
-    backTraj = list()
+    df = pd.DataFrame()
     for d in range(len(date)):
-        backTraj.append(makeBT(date[d], conc[d], list(), list()))
-        # backTraj.append(BT(date[d], conc[d]))
         # find all back traj for the date d
         for i in range(add_hour.shape[0]):
-            backTraj[-1].date.append(date[d]+dt.timedelta(hours=add_hour[i]))
             # open back traj file
             datafile=folder+prefix+aammddhh(backTraj[-1].date[-1])
             if not os.path.isfile(datafile):
@@ -74,10 +61,15 @@ def extractBackTraj(date, conc, add_hour, folder, prefix, run=72, rainBool=True)
                     lat = lat[:idx_rain]
                     lon = lon[:idx_rain]
 
-                #backTraj[-1].temp.append(np.min(T).tolist())
-                #print(backTraj[-1].temp)
-                backTraj[-1].coord.append(np.array([lon, lat]))
-    return backTraj
+                dftmp = pd.DataFrame(data={"date":date[d],
+                                           "dateBT":date[d]+dt.timedelta(hours=add_hour[i]),
+                                           "conc":conc[d],
+                                           "lon":lon,
+                                           "lat":lat})
+                
+                df = pd.concat([df,dftmp])
+
+    return df
 
 
 def str2date(strdate):
