@@ -33,9 +33,9 @@ def extractBackTraj(date, conc, add_hour, folder, prefix, run=72, rainBool=True)
         # find all back traj for the date d
         for i in range(add_hour.shape[0]):
             # open back traj file
-            datafile=folder+prefix+aammddhh(backTraj[-1].date[-1])
+            datafile=folder+prefix+aammddhh(date[d]+dt.timedelta(hours=add_hour[i]))
             if not os.path.isfile(datafile):
-                print('Back-trajectory ' +prefix+aammddhh(backTraj[-1].date[-1])+ ' file is missing')
+                print('Back-trajectory '+prefix+aammddhh(date[d]+dt.timedelta(hours=add_hour[i]))+ ' file is missing')
                 continue
             else:
                 # add the lon/lat of the BT
@@ -144,20 +144,17 @@ def PSCF(specie, backTraj=None):
             lat = np.floor(lat*2)/2
             print("Lon/Lat: %.2f / %.2f" %(lon, lat))
             # find all the BT
-            for i in range(len(backTraj)):
-                if backTraj[i].conc >= concCrit:
-                    a=np.array([])
-                    b=np.array([])
-                    for j in range(len(backTraj[i].coord)):
-                        lon_tmp = np.floor(backTraj[i].coord[j][0,:]*2)/2
-                        lat_tmp = np.floor(backTraj[i].coord[j][1,:]*2)/2
-                        a = lon_tmp==lon
-                        b = lat_tmp==lat
-                        if np.sum(a&b)!=0:
-                            xx,yy = traj(backTraj[i].coord[j][0,:], backTraj[i].coord[j][1,:])
-                            #print(lon_tmp,lat_tmp,xx,yy)
-                            ax.plot(xx, yy, '-',color='0.75')#, marker='.')
-                            print("date: %.10s | BT: %.13sh | [x]: %s"%(backTraj[i].global_date, backTraj[i].date[j], backTraj[i].conc))
+            lonNorm = np.floor(bt["lon"]*2)/2
+            latNorm = np.floor(bt["lat"]*2)/2
+            df = bt[((lonNorm == lon) & (latNorm == lat))]
+            df = df[:][df["conc"]>concCrit]
+            for i in np.unique(df["dateBT"]):
+                tmp = bt[:][bt["dateBT"]==i]
+                xx,yy = traj(tmp["lon"].as_matrix(),tmp["lat"].as_matrix())
+                ax.plot(xx,yy, '-',color='0.75')#, marker='.')
+                print("date: %.10s | BT: %.13sh | [x]: %s"%(tmp["date"].iloc[0],
+                                                            tmp["dateBT"].iloc[0],
+                                                            tmp["conc"].iloc[0]))
             print("")
             sys.stdout.flush()
             event.canvas.draw()
@@ -165,7 +162,7 @@ def PSCF(specie, backTraj=None):
         if event.button == 3:
             ax.lines=[]
             traj.plot(x_station, y_station, 'o', color='0.75')
-            pmesh=traj.pcolormesh(x_map, y_map, PSCF, cmap='hot_r')
+            pmesh=traj.pcolormesh(x_map, y_map, PSCF.T, cmap='hot_r')
             event.canvas.draw()
 
     # ===== Load the json file                  ===================================
@@ -210,27 +207,21 @@ def PSCF(specie, backTraj=None):
     
     # ===== Extract all back-traj needed        ===================================
     if backTraj is None:
-        backTraj = extractBackTraj(date, conc, add_hour, folder, prefix,
-                                   run=param["backTraj"],
-                                   rainBool=param["rainBool"])
-    return backTraj
+        bt = extractBackTraj(date, conc, add_hour, folder, prefix,
+                             run=param["backTraj"],
+                             rainBool=param["rainBool"])
 
     # ===== convert lon/lat to 0, 0.5, 1, etc
     lon = np.arange(param["LonMin"], param["LonMax"]+0.01, 0.5) #+0.1 in order to have the max in the array
     lat = np.arange(param["LatMin"], param["LatMax"]+0.01, 0.5)
     lon_map, lat_map = np.meshgrid(lon, lat)
-    ngrid = np.zeros((lat.size,lon.size))
-    mgrid = np.zeros((lat.size,lon.size))
-    for d in range(len(date)):
-        for bt in range(len(backTraj[d].coord)):
-            tmp = unique2d(np.floor(backTraj[d].coord[bt]*2)/2)
-            #print(tmp)
-            for i in range(tmp.shape[1]):
-                idx_lon = np.where(lon==tmp[0,i])[0]
-                idx_lat = np.where(lat==tmp[1,i])[0]
-                ngrid[idx_lat, idx_lon] +=1
-                if conc[d] >= concCrit:
-                    mgrid[idx_lat, idx_lon] +=1
+    
+    ngrid, xedges, yedges = np.histogram2d(bt["lon"],
+                                           bt["lat"],
+                                           bins=[np.hstack((lon,lon[-1]+0.5)),np.hstack((lat,lat[-1]+0.5))])
+    mgrid, xedges, yedges = np.histogram2d(bt["lon"][bt["conc"]>=concCrit],
+                                           bt["lat"][bt["conc"]>=concCrit],
+                                           bins=[np.hstack((lon,lon[-1]+0.5)),np.hstack((lat,lat[-1]+0.5))])
 
     n0 = np.where(ngrid!=0)
 
@@ -278,19 +269,19 @@ def PSCF(specie, backTraj=None):
                     resolution=resQuality)
         x_BT, y_BT = mapBT(lon_map, lat_map)
         x_station, y_station = mapBT(lon0, lat0)
-        cs = mapBT.pcolormesh(x_BT, y_BT, trajdensity, cmap='hot_r')
+        cs = mapBT.pcolormesh(x_BT, y_BT, trajdensity.T, cmap='hot_r')
 
         mapBT.drawcoastlines(color='black')
         mapBT.drawcountries(color='black')
         mapBT.plot(x_station, y_station, 'o', color='0.75')
         plt.title(param["station"]+'\nBack-traj probalility (log(n))')
-    
+        figBT.canvas.set_window_title(param["station"]+"_allBT")
     # ===== Polar plot                      ===================================
     if param["polarPlot"]:
         # change the coordinate system to polar from the station point
         deltalon = lon0-lon
         mesh_deltalon, mesh_lat = np.meshgrid(deltalon, lat)
-        mesh_lon, _ = np.meshgrid(lon, lat)
+        mesh_lon, _     = np.meshgrid(lon, lat)
         mesh_deltalon   = toRad(mesh_deltalon)
         mesh_lon        = toRad(mesh_lon)
         mesh_lat        = toRad(mesh_lat)
@@ -299,7 +290,8 @@ def PSCF(specie, backTraj=None):
         b = np.cos(lat0*math.pi/180)*np.sin(mesh_lat) - np.sin(lat0*math.pi/180)*np.cos(mesh_lat)*np.cos(mesh_deltalon)
         bearing = np.arctan2(a,b)
         bearing += math.pi/2                        # change the origin: from N to E
-        bearing[np.where(bearing<0)] += 2*math.pi   # 
+        bearing[np.where(bearing<0)] += 2*math.pi   # set angle between 0 and 2pi 
+        bearing = bearing.T
     
         # select and count the BT in a given Phi range 
         mPhi=list()
@@ -325,7 +317,7 @@ def PSCF(specie, backTraj=None):
                     + ' to ' + max(date).strftime('%Y/%m/%d'))
         plt.title(plotTitle)
         plt.subplots_adjust(top=0.85, bottom=0.05, left=0.07, right=0.93)
-
+        figPolar.canvas.set_window_title(param["station"]+param["species"][specie]+"_windrose")
     # ===== Plot PSCF                       ===================================
     #print(PSCF.max())
     fig=plt.figure()  # keep handle for the onclick function
@@ -342,7 +334,7 @@ def PSCF(specie, backTraj=None):
     traj.drawmapboundary()
     
     x_map, y_map = traj(lon_map, lat_map)
-    pmesh        = traj.pcolormesh(x_map, y_map, PSCF, cmap='hot_r')
+    pmesh        = traj.pcolormesh(x_map, y_map, PSCF.T, cmap='hot_r')
     
     x_station, y_station = traj(lon0, lat0)
     traj.plot(x_station, y_station, 'o', color='0.75')
@@ -354,6 +346,7 @@ def PSCF(specie, backTraj=None):
     #plt.colorbar()
         
     cid = fig.canvas.mpl_connect('button_press_event', onclick)
+    figPolar.canvas.set_window_title(param["station"]+param["species"][specie])
     # plt.savefig("/run/media/samuel/USB DISK/PSCF_organique/"+param["station"]+"_"+param["species"][specie]+".png")
     plt.show()
     # plt.close()

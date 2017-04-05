@@ -4,7 +4,7 @@
     "station": "OPE",
     "prefix": "traj_OPE_",
     "backTraj": 72,
-    "add_hour": "[0, 3, 6]",
+    "add_hour": "[-6, -3, 0, 3, 6, 9, 12, 15, 18]",
     "dateMin": [
         "2010",
         "01",
@@ -16,10 +16,10 @@
         "04"
     ],
     "species": [
-        "muNH4agr"
+        "Sea salt"
     ],
     "threshold": "[0.4]",
-    "percentileBool": true,
+    "percentileBool": false,
     "percentile": "[75]",
     "wF": true,
     "wFmanual": false,
@@ -35,8 +35,8 @@
         "1.0"
     ],
     "smooth": true,
-    "plotBT": false,
-    "polarPlot": false,
+    "plotBT": true,
+    "polarPlot": true,
     "resolutionQuality": "low",
     "rainBool": true,
     "LonMin": -25.0,

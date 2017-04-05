@@ -466,27 +466,27 @@ class StationTab(Frame):
         # add a callback so when a station is add, we can see it in the list 
         return 1
 
-class TextoutputTab(Frame):
-    def __init__(self,parent):
-        if sys.version_info.major>=3:
-            super().__init__(parent)
-        else:
-            Frame.__init__(self,parent)
-
-        self.output_frame=LabelFrame(self,
-                                    text="Output")
-        self.output_frame.grid(row=0,
-                              column=0,
-                              sticky=N+E+S+W)
-        # ==== Text widget for output ============================================
-        self.output_text=tkst.ScrolledText(self.output_frame,
-                                           wrap="word",
-                                           width=200,
-                                           height=30)
-        self.output_text.grid(row=0,
-                             column=0,
-                             sticky=N+E+S+W)
-        self.output_text.tag_configure("stderr", foreground="#b22222")
+#class TextoutputTab(Frame):
+#    def __init__(self,parent):
+#        if sys.version_info.major>=3:
+#            super().__init__(parent)
+#        else:
+#            Frame.__init__(self,parent)
+#
+#        self.output_frame=LabelFrame(self,
+#                                    text="Output")
+#        self.output_frame.grid(row=0,
+#                              column=0,
+#                              sticky=N+E+S+W)
+#        # ==== Text widget for output ============================================
+#        self.output_text=tkst.ScrolledText(self.output_frame,
+#                                           wrap="word",
+#                                           width=200,
+#                                           height=30)
+#        self.output_text.grid(row=0,
+#                             column=0,
+#                             sticky=N+E+S+W)
+#        self.output_text.tag_configure("stderr", foreground="#b22222")
 
 class BacktrajTab(Frame):
     def __init__(self,parent):
@@ -1258,10 +1258,10 @@ class MainFrame(Frame):
                          text="PSCF",
                          sticky=N+E+S+W)
         # Output
-        self.output_tab=TextoutputTab(None)
-        self.notebook.add(self.output_tab,
-                         text="Output",
-                         sticky=N+E+S+W)
+        #self.output_tab=TextoutputTab(None)
+        #self.notebook.add(self.output_tab,
+        #                 text="Output",
+        #                 sticky=N+E+S+W)
 
         # Station param
         self.station_tab=StationTab(None)
@@ -1329,7 +1329,7 @@ class MainFrame(Frame):
         with open('parameters'+os.sep+'localParamPSCF.json', 'r') as dataFile:
             param=json.load(dataFile)
         # change tab
-        self.notebook.select(2)
+        # self.notebook.select(2)
         print("PSCF starts... Please wait.")
         for specie in range(len(param["species"])):
             p = Process(target=PSCF, args=(specie,))
@@ -1581,7 +1581,7 @@ if __name__ == '__main__':
     def redirector(inputStr):
         app.output_tab.output_text.insert(INSERT, inputStr)
     #Redirect stdout/stderr to text
-    sys.stdout.write = redirector
+    #sys.stdout.write = redirector
     #sys.stderr.write = redirector
 
     print("==== Welcome to the PSCF GUI ====")
