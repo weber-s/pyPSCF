@@ -346,7 +346,7 @@ def PSCF(specie, backTraj=None):
     #plt.colorbar()
         
     cid = fig.canvas.mpl_connect('button_press_event', onclick)
-    figPolar.canvas.set_window_title(param["station"]+param["species"][specie])
+    fig.canvas.set_window_title(param["station"]+param["species"][specie])
     # plt.savefig("/run/media/samuel/USB DISK/PSCF_organique/"+param["station"]+"_"+param["species"][specie]+".png")
     plt.show()
     # plt.close()
