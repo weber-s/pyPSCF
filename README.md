@@ -10,7 +10,7 @@ Under the hood [hysplit](https://ready.arl.noaa.gov/HYSPLIT.php) is used to
 compute backtrajectories. This GUI allow you to compute easily large number of
 backtrajectories given a starting date and a end date.
 
-![static/img/BackTrajGUI.png]
+![backtraj](static/img/BackTrajGUI.png)
 
 # Compute PSCF 
 
@@ -18,14 +18,14 @@ backtrajectories given a starting date and a end date.
 
 The second tab of the GUI are the PSCF parameters.
 
-![static/img/PSCF.png]
+![PSCF](static/img/PSCF.png)
 
 ## Output
 
 A figure will show up with the PSCF in colorscale. You can clic on a gridcell to
 see all the backtrajectories that pass through this gridcell.
 
-![static/img/SeaSalt_BT.png]
+![example](static/img/SeaSalt_BT.png)
 
 # Contribution
 
