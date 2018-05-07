@@ -14,13 +14,6 @@ from multiprocessing import Process
 import linecache
 import pandas as pd
 
-# tkinter modules
-if sys.version_info.major >= 3:
-    from tkinter.messagebox import *
-    #sys.exit("You have to run it with python 2, not python 3.")
-else:
-    # we are on Python 2
-    from tkMessageBox import *
 
 
 
@@ -72,55 +65,51 @@ def json2arr(astr,dtype):
 
 class PSCF:
     """
-    The main PSCF function. Compute the PSCF according to the parameters in 'localParamPSCF.json'.
-    The argument is the rank of the specie in the "species" in the 'localParamPSCF.json' file.
-    If no argument is given, assume that there is only one specie and takes the first one.
+
+    Parameters
+    ----------
+    station : str
+        The name of the station.
+    specie :
+    lat0 :
+    lon0 :
+    folder : param["dirBackTraj"]
+    prefix : param["prefix"]
+    add_hour : json2arr(param["add_hour"], np.float64)
+    resQuality : param["resolutionQuality"][0]
+    percentile : json2arr(param["percentile"], np.float64)
+    threshold : json2arr(param["threshold"], np.float64)
+    concFile : str, path.
+        The path to the concentration file.
+    dateMin :
+    dateMax :
+    wfunc : boolean, default True
+        Either or not use a weighting function.
+    wfunc_type : "manual" or "auto", default "auto"
+        Type of weighting function. "auto" is continuous.
+    mapMinMax : dict
+        Dictionary of minimun/maximum of lat/lon for the map.
+    cutWithRain : boolean, default True
+        Either or not cut the backtrajectory to the last rainning date.
+    hourinthepast : integer, default 72
+        Number of hour considered for the backtrajectory life.
+    smoothplot : boolean, default True
+        Use a gaussian filter to smooth the map plot.
+    plotBT : boolean, default True
+        Either or not plot all the backtraj in a new axe.
+    plotPolar : boolean, default True
+        Either or not plot the direction the distribution of the PSCF in a
+        polar plot.
+
+    pd_kwarg : dict, optional
+        dictionary of option pass to pd.read_csv to read the concentration
+        file. By default, pd_kwarg={'index_col'=0, 'parse_date'=['date']}.
     """
     def __init__(self, station, specie, lat0, lon0, folder, prefix, add_hour, resQuality,
                  percentile, threshold, concFile, dateMin, dateMax, wfunc=True,
                  wfunc_type="auto", smoothplot=True, mapMinMax=None,
                  cutWithRain=True, hourinthepast=72, plotBT=True, plotPolar=True, pd_kwarg=None):
-        """
 
-        Parameters
-        ----------
-        station : str
-            The name of the station.
-        specie :
-        lat0 :
-        lon0 :
-        folder : param["dirBackTraj"]
-        prefix : param["prefix"]
-        add_hour : json2arr(param["add_hour"], np.float64)
-        resQuality : param["resolutionQuality"][0]
-        percentile : json2arr(param["percentile"], np.float64)
-        threshold : json2arr(param["threshold"], np.float64)
-        concFile : str, path.
-            The path to the concentration file.
-        dateMin :
-        dateMax :
-        wfunc : boolean, default True
-            Either or not use a weighting function.
-        wfunc_type : "manual" or "auto", default "auto"
-            Type of weighting function. "auto" is continuous.
-        mapMinMax : dict
-            Dictionary of minimun/maximum of lat/lon for the map.
-        cutWithRain : boolean, default True
-            Either or not cut the backtrajectory to the last rainning date.
-        hourinthepast : integer, default 72
-            Number of hour considered for the backtrajectory life.
-        smoothplot : boolean, default True
-            Use a gaussian filter to smooth the map plot.
-        plotBT : boolean, default True
-            Either or not plot all the backtraj in a new axe.
-        plotPolar : boolean, default True
-            Either or not plot the direction the distribution of the PSCF in a
-            polar plot.
-
-        pd_kwarg : dict, optional
-            dictionary of option pass to pd.read_csv to read the concentration
-            file. By default, pd_kwarg={'index_col'=0, 'parse_date'=['date']}.
-        """
 
         self.station = station
         self.specie = specie
@@ -152,10 +141,10 @@ class PSCF:
         self.hourinthepast = hourinthepast
 
         self.map = Basemap(projection='merc',
-                            llcrnrlat=mapMinMax["minlat"],
-                            urcrnrlat=mapMinMax["maxlat"],
-                            llcrnrlon=mapMinMax["minlng"],
-                            urcrnrlon=mapMinMax["maxlng"],
+                            llcrnrlat=mapMinMax["latmin"],
+                            urcrnrlat=mapMinMax["latmax"],
+                            llcrnrlon=mapMinMax["lonmin"],
+                            urcrnrlon=mapMinMax["lonmax"],
                             resolution=resQuality)
     
 
@@ -352,7 +341,7 @@ class PSCF:
                 wF[ np.where( trajdensity >= wFlim[2]) ]=wFval[3]
             elif self.wfunc_type == "auto":
                 #m0 = np.where(mgrid !=0)
-                #wF[m0] = np.log(mgrid[m0])/np.log(ngrid.max())
+                #wF[m0] = np.l_og(mgrid[m0])/np.log(ngrid.max())
                 wF[not0] = np.log(ngrid[not0])/np.log(ngrid.max())
 
             PSCF = PSCF * wF
@@ -470,7 +459,6 @@ class PSCF:
         cid = fig.canvas.mpl_connect('button_press_event',
                                      lambda event: self.onclick(event, "PSCF"))
         fig.canvas.set_window_title(self.station+self.specie)
-
 
 # This part is only if you want to run this file via command line.
 # Be sure to have a correct 'localParamPSCF.json' file before running it... otherwhise you will have many error messages.

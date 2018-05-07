@@ -28,8 +28,10 @@ else: # we are on Python 2
     # ttk must be called last
     from ttk import *
 
-from modules.PSCF4GUI import PSCF, specie2study
-from modules.backTraj4GUI import BT
+# from modules.PSCF4GUI import PSCF, specie2study
+# from modules.backTraj4GUI import BT
+
+from pyPSCF import pyPSCF
 
 def arr2json(arr):
     return json.dumps(arr.tolist())
@@ -829,10 +831,10 @@ class PSCFTab(Frame):
         self.add_hourEntry=EntryContext(self.Backtraj_frame, width=28, textvariable=self.add_hour, justify=LEFT)
         self.add_hourEntry.grid(row=3, column=0, columnspan=2, sticky=W, padx=5, pady=5)
         # Cut with rain
-        self.rainBool=BooleanVar()
-        self.rainBool.set(self.param["rainBool"])
-        self.rainBoolCheck=Checkbutton(self.Backtraj_frame, text="Cut when it's raining", variable=self.rainBool)
-        self.rainBoolCheck.grid(row=4, column=0, sticky=W, padx=5, pady=5)
+        self.cutWithRain=BooleanVar()
+        self.cutWithRain.set(self.param["cutWithRain"])
+        self.cutWithRainCheck=Checkbutton(self.Backtraj_frame, text="Cut when it's raining", variable=self.cutWithRain)
+        self.cutWithRainCheck.grid(row=4, column=0, sticky=W, padx=5, pady=5)
 
         # ============== Weighting Function Frame ========================
         self.wf_frame=LabelFrame(self.PSCF_frame,
@@ -1005,10 +1007,10 @@ class PSCFTab(Frame):
         self.LatMax=StringVar()
         self.LonMin=StringVar()
         self.LonMax=StringVar()
-        self.LatMin.set(self.param["LatMin"])
-        self.LatMax.set(self.param["LatMax"])
-        self.LonMin.set(self.param["LonMin"])
-        self.LonMax.set(self.param["LonMax"])
+        self.LatMin.set(self.param["mapMinMax"]["latmin"])
+        self.LatMax.set(self.param["mapMinMax"]["latmax"])
+        self.LonMin.set(self.param["mapMinMax"]["lonmin"])
+        self.LonMax.set(self.param["mapMinMax"]["lonmax"])
         self.areaLonMinLabel=Label(self.areaPack, text='Lon min', justify=LEFT).pack(side=LEFT)
         self.areaLonMinEntry=EntryContext(self.areaPack, width=5, textvariable=self.LonMin).pack(side=LEFT)
         self.areaLonMaxLabel=Label(self.areaPack, text='Lon max', justify=LEFT).pack(side=LEFT)
@@ -1022,20 +1024,21 @@ class PSCFTab(Frame):
         self.plotBT.set(self.param["plotBT"])
         self.plotBTCheck=Checkbutton(self.BT_frame, text="Plot the back-traj", variable=self.plotBT)
         self.plotBTCheck.grid(row=1, column=0, sticky=W, padx=5, pady=5)
-        self.polarPlot=BooleanVar()
-        self.polarPlot.set(self.param["polarPlot"])
-        self.polarPlotCheck=Checkbutton(self.BT_frame, text="Plot the polar plot", variable=self.polarPlot)
-        self.polarPlotCheck.grid(row=1, column=1, sticky=W, padx=5, pady=5)
-        self.smooth=BooleanVar()
-        self.smooth.set(self.param["smooth"])
-        self.smoothCheck=Checkbutton(self.BT_frame, text="Smooth the result", variable=self.smooth)
-        self.smoothCheck.grid(row=1, column=2, sticky=W, padx=5, pady=5)
-        self.resolutionLabel=Label(self.BT_frame, text="Background resolution", justify=LEFT)
-        self.resolutionLabel.grid(row=1, column=3, sticky=W, padx=5, pady=5)
-        self.resolutionQuality=StringVar()
-        self.resolutionQuality.set(self.param["resolutionQuality"])
-        self.resolutionQualityChoice=OptionMenu(self.BT_frame, self.resolutionQuality, self.param["resolutionQuality"], "crude", "low", "intermediate", "high", "full")
-        self.resolutionQualityChoice.grid(row=1, column=4, sticky=W, padx=5, pady=5)
+        self.plotPolar=BooleanVar()
+        self.plotPolar.set(self.param["plotPolar"])
+        self.plotPolarCheck=Checkbutton(self.BT_frame, text="Plot the polar plot", variable=self.plotPolar)
+        self.plotPolarCheck.grid(row=1, column=1, sticky=W, padx=5, pady=5)
+        self.smoothplot=BooleanVar()
+        self.smoothplot.set(self.param["smoothplot"])
+        self.smoothplotCheck=Checkbutton(self.BT_frame, text="smooth the result", variable=self.smoothplot)
+        self.smoothplotCheck.grid(row=1, column=2, sticky=W, padx=5, pady=5)
+        self.resLabel=Label(self.BT_frame, text="Background resolution", justify=LEFT)
+        self.resLabel.grid(row=1, column=3, sticky=W, padx=5, pady=5)
+        self.resQuality=StringVar()
+        self.resQuality.set(self.param["resQuality"])
+        self.resQualityChoice=OptionMenu(self.BT_frame, self.resQuality,
+                                         self.param["resQuality"], "crude", "low", "intermediate", "high", "full")
+        self.resQualityChoice.grid(row=1, column=4, sticky=W, padx=5, pady=5)
 
         # ===== First check ==========================================================
         self.wf_callback(self.wf_frame)
@@ -1070,13 +1073,13 @@ class PSCFTab(Frame):
         # Check wf
         # TODO
         # Check Species
-        for specie in self.param["species"]:
-            sp  = specie2study(self.param["Cfile"], specie)
-            if sp == -999:
-                header=np.genfromtxt(self.param["Cfile"], delimiter=';', max_rows=1, dtype=str)
-                text="The specie \""+specie+"\" is not found in the concentration file.\n\nPossible species are:\n"+ ", ".join(list(header[1:]))
-                showinfo("""Error""",text) 
-                return 0
+        # for specie in self.param["species"]:
+        #     sp  = specie2study(self.param["Cfile"], specie)
+        #     if sp == -999:
+        #         header=np.genfromtxt(self.param["Cfile"], delimiter=';', max_rows=1, dtype=str)
+        #         text="The specie \""+specie+"\" is not found in the concentration file.\n\nPossible species are:\n"+ ", ".join(list(header[1:]))
+        #         showinfo("""Error""",text) 
+        #         return 0
         # Check length of parameter
         if (len(self.param["species"]) != len(threshold)) and not self.param["percentileBool"] and (len(threshold) != 1):
             showinfo("""Error""", """The number of specie and threshold must match or the threshold must be unique.""")
@@ -1106,15 +1109,18 @@ class PSCFTab(Frame):
                             "wFmanual": self.wf_manual.get(),
                             "wFlim": [self.wFlim0.get(), self.wFlim1.get(), self.wFlim2.get()],
                             "wFval": [self.wFval0.get(), self.wFval1.get(), self.wFval2.get(), self.wFval3.get()],
-                            "smooth": self.smooth.get(),
+                            "smoothplot": self.smoothplot.get(),
                             "plotBT": self.plotBT.get(),
-                            "polarPlot": self.polarPlot.get(),
-                            "resolutionQuality": self.resolutionQuality.get(),
-                            "rainBool": self.rainBool.get(),
-                            "LonMin": float(self.LonMin.get()),
-                            "LonMax": float(self.LonMax.get()),
-                            "LatMin": float(self.LatMin.get()),
-                            "LatMax": float(self.LatMax.get())}
+                            "plotPolar": self.plotPolar.get(),
+                            "resQuality": self.resQuality.get(),
+                            "cutWithRain": self.cutWithRain.get(),
+                            "mapMinMax": {
+                                "latmin": float(self.LatMin.get()),
+                                "latmax": float(self.LatMax.get()),
+                                "lonmin": float(self.LonMin.get()),
+                                "lonmax": float(self.LonMax.get()),
+                            }, 
+                           }
             except (ValueError, SyntaxError):
                 # If a string is somewhere in the np.array it gives an error due to arr2json
                 # or if a bracket is missing somewhere
@@ -1328,12 +1334,48 @@ class MainFrame(Frame):
         # Run PSCF
         with open('parameters'+os.sep+'localParamPSCF.json', 'r') as dataFile:
             param=json.load(dataFile)
+        with open('parameters'+os.sep+'locationStation.json', 'r') as dataFile:
+            locStation=json.load(dataFile)
         # change tab
         # self.notebook.select(2)
         print("PSCF starts... Please wait.")
         for specie in range(len(param["species"])):
-            p = Process(target=PSCF, args=(specie,))
-            p.start()
+            model = pyPSCF.PSCF(
+                station=param["station"],
+                specie= specie,
+                lat0 = locStation[param["station"]][0],
+                lon0 = locStation[param["station"]][1],
+                folder = param["dirBackTraj"],
+                prefix=param["prefix"],
+                add_hour=param["add_hour"],
+                resQuality=param["resQuality"][0],
+                percentile=param["percentile"],
+                threshold=param["threshold"],
+                concFile=param["Cfile"],
+                dateMin=param["dateMin"],
+                dateMax=param["dateMax"],
+                wfunc=param["wF"],
+                wfunc_type= "manual" if param["wFmanual"] else "auto",
+                smoothplot=param["smoothplot"],
+                mapMinMax=param["mapMinMax"],
+                cutWithRain=param["cutWithRain"],
+                hourinthepast=param["backTraj"],
+                plotBT=param["plotBT"],
+                plotPolar=param["plotPolar"],
+                pd_kwarg={"sep": ";"},
+            )
+            # param should follow the init signature of pyPSCF.PSCF
+            # station, specie, lat0, lon0, folder, prefix, add_hour, resQuality,
+            #  percentile, threshold, concFile, dateMin, dateMax, wfunc=True,
+            # wfunc_type="auto", smoothplot=True, mapMinMax=None,
+            # cutWithRain=True, hourinthepast=72, plotBT=True, plotPolar=True, pd_kwarg=None
+
+            model.run()
+            if model.plotBT: model.plot_backtraj()
+            if model.plot_PSCF_polar: model.plot_PSCF_polar()
+            model.plot_PSCF()
+            # p = Process(target=PSCF, args=(specie,))
+            # p.start()
 
     def on_run_backtraj(self):
         # check
