@@ -7,12 +7,12 @@ lon0=5.50
 dateMax = "2014"
 dateMin = "2010"
 prefix = "traj_OPE_"
-backTraj = 72
+hourinthepast = 72
 concFile = "/home/webersa/Documents/PSCF/concentrations/OPE.csv"
 specie = "Levo" 
 station = "OPE"
 mapMinMax = {"minlng": -25.0, "maxlng": 35.0, "minlat": 32.5, "maxlat": 64.0}
-rainBool = True 
+cutWithRain = True 
 wfunc = True
 wfunc_type = "auto" 
 add_hour = [-6, -3, 0, 3, 6] 
@@ -30,4 +30,5 @@ model = PSCF(station=station, specie=specie, lat0=lat0, lon0=lon0,
              resQuality=resQuality, percentile=percentile, threshold=threshold,
              concFile=concFile, dateMin=dateMin, dateMax=dateMax, wfunc=wfunc,
              wfunc_type=wfunc_type, smoothplot=smoothplot, mapMinMax=mapMinMax,
+             cutWithRain=cutWithRain, hourinthepast=hourinthepast,
              plotBT=plotBT, plotPolar=plotPolar, pd_kwarg=pd_kwarg)
