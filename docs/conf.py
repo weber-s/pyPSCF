@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 #
 # Configuration file for the Sphinx documentation builder.
@@ -14,7 +15,7 @@
 #
 import os
 import sys
-sys.path.insert(0, os.path.abspath('../pyPSCF/'))
+sys.path.insert(0, os.path.abspath('../'))
 
 
 # -- Project information -----------------------------------------------------
@@ -46,7 +47,7 @@ extensions = [
     'sphinx.ext.napoleon',
     'sphinx.ext.viewcode',
 ]
-
+# autodoc_mock_imports = ["pyPSCF", "mpl_toolkits"]
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
 
@@ -145,7 +146,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    (master_doc, 'pypscf', 'pyPSCF Documentation',
+    (master_doc, 'pyPSCF', 'pyPSCF Documentation',
      [author], 1)
 ]
 
