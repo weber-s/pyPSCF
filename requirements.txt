@@ -2,6 +2,4 @@ pandas
 numpy
 scipy
 matplotlib
-json
 scipy
-datetime
