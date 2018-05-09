@@ -1,9 +1,7 @@
 pandas
 numpy
 scipy
-tkinter
 matplotlib
-
 json
 scipy
 datetime
