@@ -8,7 +8,6 @@ import numpy as np
 import scipy.stats as sst
 from scipy.ndimage.filters import gaussian_filter
 import matplotlib.pyplot as plt
-# from mpl_toolkits.basemap import Basemap
 import cartopy.crs as ccrs
 import math
 import linecache
@@ -124,14 +123,6 @@ class PSCF:
 
         self.cutWithRain = cutWithRain
         self.hourinthepast = hourinthepast
-
-        # self.map = Basemap(projection='merc',
-        #                    llcrnrlat=mapMinMax["latmin"],
-        #                    urcrnrlat=mapMinMax["latmax"],
-        #                    llcrnrlon=mapMinMax["lonmin"],
-        #                    urcrnrlon=mapMinMax["lonmax"],
-        #                    resolution=resQuality)
-    
 
     def toRad(self, x):
         return x*math.pi/180
@@ -331,7 +322,15 @@ class PSCF:
         """
         figBT = plt.figure()
         ax = figBT.add_subplot(1, 1, 1, projection=ccrs.PlateCarree())
-
+        ax.set_extent(
+            [
+                self.mapMinMax["lonmin"],
+                self.mapMinMax["lonmax"],
+                self.mapMinMax["latmin"],
+                self.mapMinMax["latmax"],
+            ],
+            ccrs.PlateCarree()
+        )
         if self.smoothplot:
             trajdensity = gaussian_filter(self.trajdensity_, 1)
         else:
@@ -405,6 +404,15 @@ class PSCF:
         """
         fig = plt.figure()  # keep handle for the onclick function
         ax = fig.add_subplot(1, 1, 1, projection=ccrs.PlateCarree())
+        ax.set_extent(
+            [
+                self.mapMinMax["lonmin"],
+                self.mapMinMax["lonmax"],
+                self.mapMinMax["latmin"],
+                self.mapMinMax["latmax"],
+            ],
+            ccrs.PlateCarree()
+        )
 
         if self.smoothplot:
             PSCF = gaussian_filter(self.PSCF_, 1)
@@ -412,7 +420,6 @@ class PSCF:
             PSCF = self.PSCF_
 
         ax.coastlines()
-        # self.map.drawcountries()
 
         pmesh = ax.pcolormesh(self.lon_map, self.lat_map, PSCF.T, cmap='hot_r')
 
