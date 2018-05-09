@@ -135,7 +135,7 @@ class PSCF:
             lon, lat = event.xdata, event.ydata
             lon = np.floor(lon*2)/2
             lat = np.floor(lat*2)/2
-            print("Lon/Lat: %.2f / %.2f".format(lon, lat))
+            print("Lon/Lat: {:.2f} / {:.2f}".format(lon, lat))
             # find all the BT
             lonNorm = np.floor(self.bt["lon"]*2)/2
             latNorm = np.floor(self.bt["lat"]*2)/2
@@ -145,9 +145,9 @@ class PSCF:
             for i in np.unique(df["dateBT"]):
                 tmp = self.bt[:][self.bt["dateBT"] == i]
                 ax.plot(tmp["lon"], tmp["lat"], '-', color='0.75')  # , marker='.')
-                print("date: %.10s | BT: %.13sh | [x]: %s".format(
-                    tmp["date"].iloc[0],
-                    tmp["dateBT"].iloc[0],
+                print("date: {:10} | BT: {:13}h | [x]: {:f}".format(
+                    tmp["date"].iloc[0].strftime('%Y-%m-%d'),
+                    tmp["dateBT"].iloc[0].strftime('%Y-%m-%d %H'),
                     tmp["conc"].iloc[0])
                 )
             print("")

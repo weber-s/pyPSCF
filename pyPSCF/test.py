@@ -32,3 +32,5 @@ model = PSCF(station=station, specie=specie, lat0=lat0, lon0=lon0,
              wfunc_type=wfunc_type, smoothplot=smoothplot, mapMinMax=mapMinMax,
              cutWithRain=cutWithRain, hourinthepast=hourinthepast,
              plotBT=plotBT, plotPolar=plotPolar, pd_kwarg=pd_kwarg)
+
+model.run()
