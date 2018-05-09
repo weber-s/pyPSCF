@@ -10,7 +10,9 @@ Welcome to pyPSCF's documentation!
    :maxdepth: 2
    :caption: Contents:
 
-   modules
+   Install <install.rst>
+   Development <development.rst>
+   API <api.rst>
 
 
 Indices and tables

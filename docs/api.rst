@@ -1,16 +1,9 @@
-pyPSCF package
-==============
-
-Submodules
-----------
-
-pyPSCF.pyPSCF module
---------------------
+API
+===
 
 .. automodule:: pyPSCF.pyPSCF
     :members:
     :undoc-members:
-    :show-inheritance:
 
 
 .. Module contents
