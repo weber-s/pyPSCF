@@ -1,66 +1,17 @@
 # -*-coding:Utf-8 -*
-import sys, os
+import sys
+import os
 import datetime as dt
 import numpy as np
-import json
 # import scipy
+# from scipy import signal
+import scipy.stats as sst
 from scipy.ndimage.filters import gaussian_filter
 import matplotlib.pyplot as plt
 from mpl_toolkits.basemap import Basemap
-# from scipy import signal
-import scipy.stats as sst
 import math
-from multiprocessing import Process
 import linecache
 import pandas as pd
-
-
-
-
-
-def str2date(strdate):
-    # "31/10/2010 22:34"
-    date=list()
-    print(strdate)
-    for d in strdate:
-        if d=='':
-            return float(-999)
-        date.append(dt.datetime.strptime(d, '%d/%m/%Y %H:%M'))
-    date = np.array(date)
-    return(date)
-
-def specie2study(Cfile, sp):
-    header=np.genfromtxt(Cfile, delimiter=';', max_rows=1, dtype=str)
-    j=-999
-    for i in range(0, header.size):
-        if header[i].upper()==sp.upper():
-            j=i
-    return(j)
-
-def dateformat(a):
-    if len(a)==1:
-        return '0%s' % (a,)
-    else:
-        return a
-
-def aammddhh(x):
-    yy=str(x.year)[2:]
-    mm=dateformat(str(x.month))
-    dd=dateformat(str(x.day))
-    hh=dateformat(str(x.hour))
-    return '%s%s%s%s' % (yy,mm,dd,hh)    ##needs to be adapted
-
-def unique2d(a):
-    x, y = a
-    b = x + y*1.0j
-    idx = np.unique(b,return_index=True)[1]
-    return a[:,idx]
-
-def arr2json(arr):
-    return json.dumps(arr.tolist())
-
-def json2arr(astr,dtype):
-    return np.fromiter(json.loads(astr),dtype)
 
 
 class PSCF:
@@ -70,29 +21,57 @@ class PSCF:
     ----------
     station : str
         The name of the station.
-    specie :
-    lat0 :
-    lon0 :
-    folder : param["dirBackTraj"]
-    prefix : param["prefix"]
-    add_hour : json2arr(param["add_hour"], np.float64)
-    resQuality : param["resolutionQuality"][0]
-    percentile : json2arr(param["percentile"], np.float64)
-    threshold : json2arr(param["threshold"], np.float64)
+    specie : str
+        The specie to study. Must be specified in the concentration file.
+    lat0 : float
+        The latitude of the starting point.
+    lon0 : float
+        The longitude of the starting point.
+    folder : str, path
+        Path to the backtrajectories files.
+    prefix : str
+        Prefix of all backtrajectories. Something like 'traj\_OPE\_'
+    add_hour : list or array
+        List of backtrajecories starting hours around the reference hour.
+        Example: add_hour=[-3,0,3] and reference hour of 2017-03-15 09:00,
+        the following backtrajectories will be used:
+
+        - 2017-03-15 06:00
+        - 2017-03-15 09:00
+        - 2017-03-15 12:00
+
+        All theses backtrajecories are associated to the concentration of the
+        refrence hour.
     concFile : str, path.
         The path to the concentration file.
-    dateMin :
-    dateMax :
+    dateMin : str or datetime object
+        The minimal date to account.
+    dateMax : str or datetime object
+        The maximal date to account.
+    percentile : int, default 75
+        The percentile to use as threshold.
+    threshold : float, default None
+        The concentration threshold. It overrides the `percentile` value.
     wfunc : boolean, default True
         Either or not use a weighting function.
     wfunc_type : "manual" or "auto", default "auto"
         Type of weighting function. "auto" is continuous.
     mapMinMax : dict
         Dictionary of minimun/maximum of lat/lon for the map.
+        Example:
+        mapMinMax = {
+            'latmin': 37.5,
+            'latmax': 60,
+            'lonmin': -10,
+            'lonmax': 20
+            }
+        This example is the default (France centered).
     cutWithRain : boolean, default True
         Either or not cut the backtrajectory to the last rainning date.
     hourinthepast : integer, default 72
         Number of hour considered for the backtrajectory life.
+    resQuality : str, default 'l'
+        The quality of the map.
     smoothplot : boolean, default True
         Use a gaussian filter to smooth the map plot.
     plotBT : boolean, default True
@@ -101,36 +80,42 @@ class PSCF:
         Either or not plot the direction the distribution of the PSCF in a
         polar plot.
 
+    Other Parameters
+    ----------------
     pd_kwarg : dict, optional
-        dictionary of option pass to pd.read_csv to read the concentration
+        Dictionary of option pass to pd.read_csv to read the concentration
         file. By default, pd_kwarg={'index_col'=0, 'parse_date'=['date']}.
     """
-    def __init__(self, station, specie, lat0, lon0, folder, prefix, add_hour, resQuality,
-                 percentile, threshold, concFile, dateMin, dateMax, wfunc=True,
-                 wfunc_type="auto", smoothplot=True, mapMinMax=None,
-                 cutWithRain=True, hourinthepast=72, plotBT=True, plotPolar=True, pd_kwarg=None):
-
+    def __init__(self, station, specie, lat0, lon0, folder, prefix, add_hour,
+                 concFile, dateMin, dateMax, percentile=75, threshold=None,
+                 wfunc=True, wfunc_type="auto", resQuality="l", smoothplot=True,
+                 mapMinMax=None, cutWithRain=True, hourinthepast=72,
+                 plotBT=True, plotPolar=True, pd_kwarg=None):
 
         self.station = station
         self.specie = specie
-        self.lat0 = lat0
-        self.lon0 = lon0
+        self.lat0 = float(lat0)
+        self.lon0 = float(lon0)
         self.folder = folder
         self.prefix = prefix
-        self.add_hour = add_hour
+        self.add_hour = [float(i) for i in add_hour]
         self.resQuality = resQuality
         self.percentile = percentile
         self.threshold = threshold
 
-        self.mapMinMax = mapMinMax
+        if mapMinMax:
+            self.mapMinMax = mapMinMax
+        else:
+            self.mapMinMax = {'latmin': 37.5, 'latmax': 60,
+                              'lonmin': -10, 'lonmax': 20}
         self.dateMin = dateMin
         self.dateMax = dateMax
-        
 
         # TODO: properly handle pd_kwarg
         self.data = pd.read_csv(concFile,
-                       index_col=0, parse_dates=["date"], **pd_kwarg)
-        
+                                index_col=0,
+                                parse_dates=["date"], **pd_kwarg)
+
         self.wfunc = wfunc
         self.wfunc_type = wfunc_type
         self.plotBT = plotBT
@@ -141,11 +126,11 @@ class PSCF:
         self.hourinthepast = hourinthepast
 
         self.map = Basemap(projection='merc',
-                            llcrnrlat=mapMinMax["latmin"],
-                            urcrnrlat=mapMinMax["latmax"],
-                            llcrnrlon=mapMinMax["lonmin"],
-                            urcrnrlon=mapMinMax["lonmax"],
-                            resolution=resQuality)
+                           llcrnrlat=mapMinMax["latmin"],
+                           urcrnrlat=mapMinMax["latmax"],
+                           llcrnrlon=mapMinMax["lonmin"],
+                           urcrnrlon=mapMinMax["lonmax"],
+                           resolution=resQuality)
     
 
     def toRad(self, x):
@@ -178,8 +163,8 @@ class PSCF:
             sys.stdout.flush()
             event.canvas.draw()
         if event.button == 3:
-            # lon = np.arange(self.mapMinMax["minlng"],
-            #                 self.mapMinMax["maxlng"]+0.01, 0.5) #+0.1 in order to have the max in the array
+            # lon = np.arange(self.mapMinMax["minlon"],
+            #                 self.mapMinMax["maxlon"]+0.01, 0.5) #+0.1 in order to have the max in the array
             # lat = np.arange(self.mapMinMax["minlat"], 
             #                 self.mapMinMax["maxlat"]+0.01, 0.5)
             # lon_map, lat_map = np.meshgrid(lon, lat)
@@ -226,8 +211,10 @@ class PSCF:
             # find all back traj for the date d
             for hour in self.add_hour:
                 # open back traj file
-                name = self.prefix + aammddhh(date+dt.timedelta(hours=hour))
-                datafile=os.path.join(self.folder, name)
+                # name = self.prefix + aammddhh(date+dt.timedelta(hours=hour))
+                name = self.prefix + \
+                        (date+dt.timedelta(hours=hour)).strftime('%y%m%d%H')
+                datafile = os.path.join(self.folder, name)
 
                 if not os.path.isfile(datafile):
                     print('Back-trajectory {} file is missing'.format(name))
@@ -267,14 +254,12 @@ class PSCF:
 
         return df
 
-
     def run(self):
         specie      = self.specie
         percentile  = self.percentile
         threshold   = self.threshold
         data        = self.data
         mapMinMax   = self.mapMinMax
-        station     = self.station
 
         # extract relevant info
         # date format for the file "YYYY-MM-DD HH:MM"
@@ -298,8 +283,8 @@ class PSCF:
 
         # ===== convert lon/lat to 0, 0.5, 1, etc
         # +0.1 in order to have the max in the array
-        self.lon = np.arange(mapMinMax["minlng"], mapMinMax["maxlng"]+0.01, 0.5) 
-        self.lat = np.arange(mapMinMax["minlat"], mapMinMax["maxlat"]+0.01, 0.5)
+        self.lon = np.arange(mapMinMax["lonmin"], mapMinMax["lonmax"]+0.01, 0.5) 
+        self.lat = np.arange(mapMinMax["latmin"], mapMinMax["latmax"]+0.01, 0.5)
         self.lon_map, self.lat_map = np.meshgrid(self.lon, self.lat)
         
         ngrid, xedges, yedges = np.histogram2d(self.bt["lon"],

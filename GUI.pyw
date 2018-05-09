@@ -6,11 +6,11 @@ import json
 import shutil
 import numpy as np
 from ast import literal_eval
-from multiprocessing import *
+import matplotlib.pyplot as plt
+from multiprocessing import Process
 
-# sys.version_info checks the interpreter version
-# this is used to have a script that can run on both Python2 and Python3
-# not that useful until the mainline tools are updated, but still...
+from pyPSCF import pyPSCF
+
 if sys.version_info.major >= 3:
     from tkinter import *
     from tkinter.messagebox import *
@@ -18,8 +18,8 @@ if sys.version_info.major >= 3:
     import tkinter.scrolledtext as tkst
     # ttk must be called last
     from tkinter.ttk import *
-else: # we are on Python 2
-    #import Queue
+else:  # we are on Python 2
+    # import Queue
     # tkinter modules
     from Tkinter import *
     from tkMessageBox import *
@@ -28,7 +28,6 @@ else: # we are on Python 2
     # ttk must be called last
     from ttk import *
 
-from pyPSCF import pyPSCF
 # from modules.PSCF4GUI import PSCF, specie2study
 # from modules.backTraj4GUI import BT
 
@@ -101,7 +100,7 @@ class ContextMenu(Menu):
             # adding a SEL tag to a chunk of text causes it to be selected
             self.widget.tag_add(SEL, "1.0", END)
         elif isinstance(self.widget, Entry) or \
-             isinstance(self.widget, Combobox):
+                isinstance(self.widget, Combobox):
             # apparently, the <<SelectAll>> event doesn't fire correctly if the widget is readonly
             self.widget.select_range(0, END)
         elif isinstance(self.widget, Spinbox):
@@ -233,12 +232,13 @@ class SelectDirectory(LabelFrame):
             super().__init__(parent, text=title, **kwargs)
         else:
             LabelFrame.__init__(self, parent, text=title, **kwargs)
-            self.textvariable = textvariable
-            self.dir_entry = EntryContext(self,
-                                          width=40,
-                                          textvariable=self.textvariable)
-            self.dir_entry.pack(side=LEFT,
-                                fill=BOTH,
+
+        self.textvariable = textvariable
+        self.dir_entry = EntryContext(self,
+                                      width=40,
+                                      textvariable=self.textvariable)
+        self.dir_entry.pack(side=LEFT,
+                            fill=BOTH,
                             expand=YES)
         self.dir_button = Button(self,
                                  image=ICONS['browse'],
@@ -263,18 +263,18 @@ class SelectDirectory(LabelFrame):
             # os.path.expanduser gets the current user's home directory on every platform
             if sys.platform == "win32":
                 # get userdata directory on Windows
-                # it assumes that you choose to store userdata in the My Games directory
-                # while installing Wesnoth
                 userdata = os.path.join(os.path.expanduser("~"),
-                                      "Documents")
-            elif sys.platform.startswith("linux"): # we're on Linux; usually this string is 'linux2'
+                                        "Documents")
+            elif sys.platform.startswith("linux"):  # we're on Linux;
+                # usually this string is 'linux2'
                 userdata = os.path.join(os.path.expanduser("~"),
-                                      "Documents")
-            elif sys.platform == "darwin": # we're on MacOS
+                                        "Documents")
+            elif sys.platform == "darwin":  # we're on MacOS
                 # bear in mind that I don't have a Mac, so this point may be bugged
                 userdata = os.path.join(os.path.expanduser("~"),
-                                      "Library")
-            else: # unknown system; if someone else wants to add other rules, be my guest
+                                        "Library")
+            else:  # unknown system;
+                # if someone else wants to add other rules, be my guest
                 userdata="."
 
             if os.path.exists(userdata): # we may have gotten it wrong
@@ -315,7 +315,7 @@ class StationTab(Frame):
         with open('parameters'+os.sep+'locationStation.json', 'r') as dataFile:
             self.locStation = json.load(dataFile)
 
-        # ===== Station to modify or delete ======================================
+        # ===== Station to modify or delete ==================================
         self.modif_frame = LabelFrame(self.station_frame,
                                       text="Modify existing station")
         self.modif_frame.grid(row=1,
@@ -354,7 +354,7 @@ class StationTab(Frame):
         self.altEntry = EntryContext(self.modif_frame, width=10, textvariable=self.alt)
         self.altEntry.grid(row=3, column=1, sticky=E+W, padx=5, pady=5)
 
-        # ===== Button 
+        # ===== Button
         self.buttonBoxModif = Frame(self.modif_frame)
         self.buttonBoxModif.grid(row=4,
                                  column=0,
@@ -364,14 +364,14 @@ class StationTab(Frame):
                                   text="Save",
                                   image=ICONS['save'],
                                   compound=LEFT,
-                                  width=15, # to avoid changing size when callback is called
+                                  width=15,  # to avoid changing size when callback is called
                                   command=self.on_save)
         self.save_button.pack(side=LEFT, padx=5, pady=5)
         self.delete_button = Button(self.buttonBoxModif,
                                     text="Delete",
-                                    #image=ICONS['save'],
+                                    # image=ICONS['save'],
                                     compound=LEFT,
-                                    width=15, # to avoid changing size when callback is called
+                                    width=15,  # to avoid changing size when callback is called
                                     command=self.on_delete)
         self.delete_button.pack(side=RIGHT, padx=5, pady=5)
 
@@ -537,7 +537,7 @@ class BacktrajTab(Frame):
         self.Backtraj_frame.grid(row=0,
                                  column=0,
                                  sticky=N+E+S+W)
-        #Directory
+        # Directory
         self.dirGDAS = StringVar()
         self.dirGDAS.set(self.param["dirGDAS"])
         self.dirGDASSelect = SelectDirectory(self.Backtraj_frame, textvariable=self.dirGDAS, title="Meteo (GDAS) directory")
@@ -585,7 +585,7 @@ class BacktrajTab(Frame):
         self.altLabel.grid(row=1, column=4, sticky=W, padx=5, pady=5)
         self.altEntry = EntryContext(self.station_frame, width=10, textvariable=self.alt)
         self.altEntry.grid(row=1, column=5, sticky=W, padx=5, pady=5)
-        
+
         # ===== Time frame                          ===========================
         self.time_frame = LabelFrame(self.Backtraj_frame,
                                      text="Date")
@@ -682,7 +682,7 @@ class BacktrajTab(Frame):
         self.CPUEntry.grid(row=0, column=1, sticky=W, padx=5, pady=5)
         self.l1 = Label(self.cpu_frame, text="Each CPU is uses to its maximum. So be careful.")
         self.l1.grid(row=1, column=0, columnspan=5, sticky=W, padx=5, pady=5)
-        
+
         # ====================================================================
         self.columnconfigure(0, weight=10)
         self.Backtraj_frame.columnconfigure(0, weight=10)
@@ -728,7 +728,7 @@ class BacktrajTab(Frame):
                 os.makedirs(dirOutput)
             else:
                 showerror("Error", "Script exit")
-                return (0,0)
+                return (0, 0)
         return (1, self.param["cpu"])
 
     def on_save(self):
@@ -772,9 +772,10 @@ class BacktrajTab(Frame):
         else:
             self.dirOutputSelect.dir_entry.config(foreground='black')
 
+
 class PSCFTab(Frame):
     def __init__(self, parent):
-        if sys.version_info.major>=3:
+        if sys.version_info.major >= 3:
             super().__init__(parent)
         else:
             Frame.__init__(self, parent)
@@ -784,7 +785,7 @@ class PSCFTab(Frame):
             self.param = json.load(dataFile)
 
         with open('parameters'+os.sep+'locationStation.json', 'r') as dataFile:
-            locStation = json.load(dataFile)
+            self.locStation = json.load(dataFile)
 
         self.PSCF_frame = LabelFrame(self,
                                      text="PSCF options")
@@ -802,7 +803,7 @@ class PSCFTab(Frame):
         self.Cfile.set(self.param["Cfile"])
         self.CfileSelect = SelectFile(self.PSCF_frame, textvariable=self.Cfile, title="Concentration file")
         self.CfileSelect.grid(row=1, columnspan=3, sticky=E+W, padx=5)
-        
+
         # ============ Station Frame ===========================================
         self.station_frame = LabelFrame(self.PSCF_frame,
                                         text="Station")
@@ -816,7 +817,8 @@ class PSCFTab(Frame):
         self.station.set(self.param["station"])
         self.stationLabel = Label(self.station_frame, text="Station", justify=LEFT)
         self.stationLabel.grid(row=0, column=0, columnspan=2, sticky=W, padx=5, pady=5)
-        self.stationOptionMenu = OptionMenu(self.station_frame, self.station, self.param["station"], *locStation, command=self.station_callback)
+        self.stationOptionMenu = OptionMenu(self.station_frame, self.station,
+                                            self.param["station"], *self.locStation, command=self.station_callback)
         self.stationOptionMenu.grid(row=0, column=2, sticky=W, padx=5, pady=5)
         self.stationOptionMenu.configure(width=6)
         # Prefix for the back-trajectory
@@ -828,21 +830,21 @@ class PSCFTab(Frame):
         self.prefixTrajEntry.grid(row=1, column=2, sticky=W, padx=5, pady=5)
         # Ref point
         self.lon0 = StringVar()
-        self.lon0.set(locStation[self.param["station"]][1])
+        self.lon0.set(self.locStation[self.param["station"]][1])
         self.lon0Label = Label(self.station_frame, text="Lon", justify=LEFT)
         self.lon0Label.grid(row=2, column=0, sticky=W, padx=5, pady=5)
         self.lon0Entry = EntryContext(self.station_frame, width=5, textvariable=self.lon0)
         self.lon0Entry.grid(row=2, column=1, sticky=W, padx=5, pady=5)
         self.lat0 = StringVar()
-        self.lat0.set(locStation[self.param["station"]][0])
+        self.lat0.set(self.locStation[self.param["station"]][0])
         self.lat0Label = Label(self.station_frame, text="Lat", justify=LEFT)
         self.lat0Label.grid(row=3, column=0, sticky=W, padx=5, pady=5)
         self.lat0Entry = EntryContext(self.station_frame, width=5, textvariable=self.lat0)
         self.lat0Entry.grid(row=3, column=1, sticky=W, padx=5, pady=5)
-        
+
         # ============== Back Traj Frame ========================
         self.Backtraj_frame = LabelFrame(self.PSCF_frame,
-                                      text="Back Trajectory")
+                                         text="Back Trajectory")
         self.Backtraj_frame.grid(row=2,
                                  column=1,
                                  sticky=E+W+S+N,
@@ -881,7 +883,7 @@ class PSCFTab(Frame):
         self.weigthingFunction.set(self.param["wF"])
         self.weigthingFunctionCheck = Checkbutton(self.wf_frame, text="Use the weighting function", variable=self.weigthingFunction, command=self.wf_callback)
         self.weigthingFunctionCheck.grid(row=0, column=0, sticky=W, padx=5, pady=5)
-        
+
         self.wf_manual = BooleanVar()
         self.wf_manual.set(self.param["wFmanual"])
         manualChoice = ("Auto", "User defined")[self.wf_manual.get()]
@@ -939,9 +941,9 @@ class PSCFTab(Frame):
         self.wFval3Entry = EntryContext(self.wFbox3, width=5, textvariable=self.wFval3).pack(side=LEFT)
 
 
-        # =======================  Species to Study ============================
+        # =======================  Species to Study ===========================
         self.specie_frame = LabelFrame(self.PSCF_frame,
-                                    text="Species")
+                                       text="Species")
         self.specie_frame.grid(row=3,
                                column=0,
                                columnspan=2,
@@ -977,7 +979,7 @@ class PSCFTab(Frame):
 
         # ===== Time frame                          ===========================
         self.time_frame = LabelFrame(self.PSCF_frame,
-                                  text="Date")
+                                     text="Date")
         self.time_frame.grid(row=3,
                              column=2,
                              sticky=E+W+S+N,
@@ -991,18 +993,11 @@ class PSCFTab(Frame):
                              padx=5, pady=5)
         self.buttonMin = Frame(self.time_frame)
         self.buttonMin.grid(row=1, column=1, sticky=W+E+S+N, padx=5, pady=5)
-        self.YYmin = StringVar()
-        self.YYmin.set(self.param["dateMin"][0])
-        self.YYminLabel = Label(self.buttonMin, text="YYYY:", justify=LEFT).pack(side=LEFT)
-        self.YYminEntry = EntryContext(self.buttonMin, width=5, textvariable=self.YYmin).pack(side=LEFT)
-        self.MMmin = StringVar()
-        self.MMmin.set(self.param["dateMin"][1])
-        self.MMminLabel = Label(self.buttonMin, text="MM:", justify=LEFT).pack(side=LEFT)
-        self.MMminEntry = EntryContext(self.buttonMin, width=5, textvariable=self.MMmin).pack(side=LEFT)
-        self.DDmin = StringVar()
-        self.DDmin.set(self.param["dateMin"][2])
-        self.DDminLabel = Label(self.buttonMin, text="DD:", justify=LEFT).pack(side=LEFT)
-        self.DDminEntry = EntryContext(self.buttonMin, width=5, textvariable=self.DDmin).pack(side=LEFT)
+        self.dateMin = StringVar()
+        self.dateMin.set(self.param["dateMin"])
+        self.dateMinLabel = Label(self.buttonMin, text="YYYY-MM-DD:", justify=LEFT).pack(side=LEFT)
+        self.dateMinEntry = EntryContext(self.buttonMin, width=10,
+                                         textvariable=self.dateMin).pack(side=LEFT)
         # End time
         self.endLabel = Label(self.time_frame, text="To... ", justify=LEFT)
         self.endLabel.grid(row=2, column=0,
@@ -1010,22 +1005,15 @@ class PSCFTab(Frame):
                            padx=5, pady=0)
         self.buttonMax = Frame(self.time_frame)
         self.buttonMax.grid(row=2, column=1, sticky=W+E, padx=5, pady=5)
-        self.YYmax = StringVar()
-        self.YYmax.set(self.param["dateMax"][0])
-        self.YYmaxLabel = Label(self.buttonMax, text="YYYY:", justify=LEFT).pack(side=LEFT)
-        self.YYmaxEntry = EntryContext(self.buttonMax, width=5, textvariable=self.YYmax).pack(side=LEFT)
-        self.MMmax = StringVar()
-        self.MMmax.set(self.param["dateMax"][1])
-        self.MMmaxLabel = Label(self.buttonMax, text="MM:", justify=LEFT).pack(side=LEFT)
-        self.MMmaxEntry = EntryContext(self.buttonMax, width=5, textvariable=self.MMmax).pack(side=LEFT)
-        self.DDmax = StringVar()
-        self.DDmax.set(self.param["dateMax"][2])
-        self.DDmaxLabel = Label(self.buttonMax, text="DD:", justify=LEFT).pack(side=LEFT)
-        self.DDmaxEntry = EntryContext(self.buttonMax, width=5, textvariable=self.DDmax).pack(side=LEFT)
+        self.dateMax = StringVar()
+        self.dateMax.set(self.param["dateMax"])
+        self.dateMaxLabel = Label(self.buttonMax, text="YYYY-MM-DD:", justify=LEFT).pack(side=LEFT)
+        self.dateMaxEntry = EntryContext(self.buttonMax, width=10,
+                                         textvariable=self.dateMax).pack(side=LEFT)
 
         # ==================== Miscellaneous ==================================
         self.BT_frame = LabelFrame(self.PSCF_frame,
-                                text="Miscallaneous")
+                                   text="Miscallaneous")
         self.BT_frame.grid(row=4,
                            column=0,
                            columnspan=3,
@@ -1069,15 +1057,16 @@ class PSCFTab(Frame):
         self.resQuality = StringVar()
         self.resQuality.set(self.param["resQuality"])
         self.resQualityChoice = OptionMenu(self.BT_frame, self.resQuality,
-                                         self.param["resQuality"], "crude", "low", "intermediate", "high", "full")
+                                           self.param["resQuality"],
+                                           "crude", "low", "intermediate", "high", "full")
         self.resQualityChoice.grid(row=1, column=4, sticky=W, padx=5, pady=5)
 
-        # ===== First check ==========================================================
+        # ===== First check ==================================================
         self.wf_callback(self.wf_frame)
         self.percentile_callback()
         self.exist_file()
 
-        # ===== column config ========================================================
+        # ===== column config ================================================
         self.columnconfigure(0, weight=10)
         self.PSCF_frame.columnconfigure(0, weight=10)
         self.PSCF_frame.columnconfigure(1, weight=10)
@@ -1093,8 +1082,8 @@ class PSCFTab(Frame):
         errorCode = self.on_save()
         if errorCode == 0:
             return 1
-        threshold=json2arr(self.param["threshold"], np.float64)
-        percentile=json2arr(self.param["percentile"], np.float64)
+        threshold = json2arr(self.param["threshold"], np.float64)
+        percentile = json2arr(self.param["percentile"], np.float64)
         # Check Path
         if not os.path.exists(self.param["dirBackTraj"]):
             showinfo("""Error""", """The back traj directory does not exist""")
@@ -1125,34 +1114,35 @@ class PSCFTab(Frame):
     def on_save(self):
         with open('parameters'+os.sep+'localParamPSCF_tmp.json', 'w') as fileSave:
             try:
-                paramNew = {"dirBackTraj": self.dirBackTraj.get(),
-                            "Cfile": self.Cfile.get(),
-                            "station" : self.station.get(),
-                            "prefix": self.prefixTraj.get(),
-                            "backTraj": self.backTraj.get(),
-                            "add_hour": arr2json(np.array(literal_eval(self.add_hour.get()))),
-                            "dateMin": [self.YYmin.get(), self.MMmin.get(), self.DDmin.get()],
-                            "dateMax": [self.YYmax.get(), self.MMmax.get(), self.DDmax.get()],
-                            "species": self.species.get().split(';'),
-                            "threshold": arr2json(np.array(literal_eval(self.threshold.get()))),
-                            "percentileBool": self.percentileBool.get(),
-                            "percentile": arr2json(np.array(literal_eval(self.percentile.get()))),
-                            "wF": self.weigthingFunction.get(),
-                            "wFmanual": self.wf_manual.get(),
-                            "wFlim": [self.wFlim0.get(), self.wFlim1.get(), self.wFlim2.get()],
-                            "wFval": [self.wFval0.get(), self.wFval1.get(), self.wFval2.get(), self.wFval3.get()],
-                            "smoothplot": self.smoothplot.get(),
-                            "plotBT": self.plotBT.get(),
-                            "plotPolar": self.plotPolar.get(),
-                            "resQuality": self.resQuality.get(),
-                            "cutWithRain": self.cutWithRain.get(),
-                            "mapMinMax": {
-                                "latmin": float(self.LatMin.get()),
-                                "latmax": float(self.LatMax.get()),
-                                "lonmin": float(self.LonMin.get()),
-                                "lonmax": float(self.LonMax.get()),
-                            }, 
-                           }
+                paramNew = {
+                    "dirBackTraj": self.dirBackTraj.get(),
+                    "Cfile": self.Cfile.get(),
+                    "station": self.station.get(),
+                    "prefix": self.prefixTraj.get(),
+                    "backTraj": self.backTraj.get(),
+                    "add_hour": arr2json(np.array(literal_eval(self.add_hour.get()))),
+                    "dateMin": self.dateMin.get(),
+                    "dateMax": self.dateMax.get(),
+                    "species": self.species.get().split(';'),
+                    "threshold": arr2json(np.array(literal_eval(self.threshold.get()))),
+                    "percentileBool": self.percentileBool.get(),
+                    "percentile": arr2json(np.array(literal_eval(self.percentile.get()))),
+                    "wF": self.weigthingFunction.get(),
+                    "wFmanual": self.wf_manual.get(),
+                    "wFlim": [self.wFlim0.get(), self.wFlim1.get(), self.wFlim2.get()],
+                    "wFval": [self.wFval0.get(), self.wFval1.get(), self.wFval2.get(), self.wFval3.get()],
+                    "smoothplot": self.smoothplot.get(),
+                    "plotBT": self.plotBT.get(),
+                    "plotPolar": self.plotPolar.get(),
+                    "resQuality": self.resQuality.get(),
+                    "cutWithRain": self.cutWithRain.get(),
+                    "mapMinMax": {
+                        "latmin": float(self.LatMin.get()),
+                        "latmax": float(self.LatMax.get()),
+                        "lonmin": float(self.LonMin.get()),
+                        "lonmax": float(self.LonMax.get()),
+                    },
+                }
             except (ValueError, SyntaxError):
                 # If a string is somewhere in the np.array it gives an error due to arr2json
                 # or if a bracket is missing somewhere
@@ -1160,7 +1150,8 @@ class PSCFTab(Frame):
                 showinfo("""Error""", """There is a problem somewhere... Probably a typo in "Add hour", "Percentile" or "Threshold". The 'parameters'+os.sep+'localParamPSCF.json' file is not updated due to this problem.""")
                 return 0
             json.dump(paramNew, fileSave, indent=4)
-        shutil.copy('parameters'+os.sep+'localParamPSCF_tmp.json', 'parameters'+os.sep+'localParamPSCF.json')
+        shutil.copy('parameters'+os.sep+'localParamPSCF_tmp.json',
+                    'parameters'+os.sep+'localParamPSCF.json')
         os.remove('parameters'+os.sep+'localParamPSCF_tmp.json')
         # update the "param" dict.
         self.param = paramNew
@@ -1217,18 +1208,19 @@ class PSCFTab(Frame):
         else:
             self.CfileSelect.dir_entry.config(foreground='black')
 
+
 class aboutTab(Frame):
     def __init__(self, parent):
-        if sys.version_info.major>=3:
+        if sys.version_info.major >= 3:
             super().__init__(parent)
         else:
             Frame.__init__(self, parent)
-        
+
         self.text_frame = LabelFrame(self,
-                                  text="About this GUI")
+                                     text="About this GUI")
         self.text_frame.grid(row=0,
-                            column=0,
-                            sticky=N+E+S+W)
+                             column=0,
+                             sticky=N+E+S+W)
 
         data = """This GUI is an adapted GUI from the game "The Battle For Westnoth", developed by Elvish_Hunter, 2014-2015,\n under the GNU GPL v2 license.\n
 Original PSCF script: Jean-Eudes PETIT \n
@@ -1236,8 +1228,8 @@ New PSCF script and GUI tools : Samuel WEBER\n
 Icons are taken from the Tango Desktop Project (http://tango.freedesktop.org) and are released in the Public Domain."""
         text = Label(self.text_frame, text=data)
         text.grid(row=0,
-                 column=0,
-                 sticky=N+E+S+W)
+                  column=0,
+                  sticky=N+E+S+W)
 
         # use a proportional font to handle spaces correctly
         text.config(font=('Arial', 12))
@@ -1249,7 +1241,7 @@ Icons are taken from the Tango Desktop Project (http://tango.freedesktop.org) an
 class MainFrame(Frame):
     def __init__(self, parent):
         self.parent = parent
-        if sys.version_info.major>=3:
+        if sys.version_info.major >= 3:
             super().__init__(parent)
         else:
             Frame.__init__(self, parent)
@@ -1274,14 +1266,14 @@ class MainFrame(Frame):
                                   command=self.on_save)
         self.save_button.pack(side=LEFT, padx=5, pady=5)
         self.exit_button = Button(self.buttonBox,
-                                text="Exit",
-                                image=ICONS['exit'],
-                                compound=LEFT,
-                                command=parent.destroy)
+                                  text="Exit",
+                                  image=ICONS['exit'],
+                                  compound=LEFT,
+                                  command=parent.destroy)
         self.exit_button.pack(side=RIGHT, padx=5, pady=5)
 
 
-        # ===== NoteBook =========================================================
+        # ===== NoteBook =====================================================
         self.notebook = Notebook(self)
         self.notebook.grid(row=1,
                            column=0,
@@ -1313,7 +1305,7 @@ class MainFrame(Frame):
                           text="About",
                           sticky=N+E+S+W)
 
-        # ===== Text =============================================================
+        # ===== Text ========================================================
         # self.text = tkst.ScrolledText(self,
         #                              wrap="word",
         #                               width  = 200,
@@ -1331,7 +1323,7 @@ class MainFrame(Frame):
         # this allows using the mouse wheel even on the disabled Text widget
         # without the need to clic on said widget
         self.tk_focusFollowsMouse()
-        
+
         self.notebook.bind("<<NotebookTabChanged>>", self.tab_callback)
 
     def tab_callback(self, event):
@@ -1353,7 +1345,7 @@ class MainFrame(Frame):
     def on_save(self):
         # we check the ID of the active tab and ask its position
         # the order of the tabs is pretty obvious
-        active_tab=self.notebook.index(self.notebook.select())
+        active_tab = self.notebook.index(self.notebook.select())
         if active_tab == 0:
             self.backtraj_tab.on_save()
         elif active_tab == 1:
@@ -1366,23 +1358,22 @@ class MainFrame(Frame):
         # Run PSCF
         with open('parameters'+os.sep+'localParamPSCF.json', 'r') as dataFile:
             param = json.load(dataFile)
-        # with open('parameters'+os.sep+'locationStation.json', 'r') as dataFile:
-        #     locStation=json.load(dataFile)
+
         # change tab
         # self.notebook.select(2)
         print("PSCF starts... Please wait.")
         for specie in range(len(param["species"])):
             model = pyPSCF.PSCF(
                 station=param["station"],
-                specie=specie,
+                specie=param["species"][specie],
                 lat0=self.PSCF_tab.locStation[param["station"]][0],
                 lon0=self.PSCF_tab.locStation[param["station"]][1],
                 folder=param["dirBackTraj"],
                 prefix=param["prefix"],
-                add_hour=param["add_hour"],
+                add_hour=json2arr(param["add_hour"], np.float),
                 resQuality=param["resQuality"][0],
-                percentile=param["percentile"],
-                threshold=param["threshold"],
+                percentile=json2arr(param["percentile"], np.float)[specie],
+                threshold=json2arr(param["threshold"], np.float)[specie],
                 concFile=param["Cfile"],
                 dateMin=param["dateMin"],
                 dateMax=param["dateMax"],
@@ -1394,18 +1385,17 @@ class MainFrame(Frame):
                 hourinthepast=param["backTraj"],
                 plotBT=param["plotBT"],
                 plotPolar=param["plotPolar"],
-                pd_kwarg={"sep": ";"},
+                pd_kwarg={"sep": ","},
             )
             # param should follow the init signature of pyPSCF.PSCF
-            # station, specie, lat0, lon0, folder, prefix, add_hour, resQuality,
-            #  percentile, threshold, concFile, dateMin, dateMax, wfunc=True,
-            # wfunc_type="auto", smoothplot=True, mapMinMax=None,
-            # cutWithRain=True, hourinthepast=72, plotBT=True, plotPolar=True, pd_kwarg=None
 
             model.run()
-            if model.plotBT: model.plot_backtraj()
-            if model.plot_PSCF_polar: model.plot_PSCF_polar()
+            if model.plotBT:
+                model.plot_backtraj()
+            if model.plotPolar:
+                model.plot_PSCF_polar()
             model.plot_PSCF()
+            plt.show()
             # p = Process(target=PSCF, args=(specie,))
             # p.start()
 
@@ -1414,7 +1404,7 @@ class MainFrame(Frame):
         errorCode = self.backtraj_tab.on_save()
         if errorCode == 0:
             return
-        errorCode, nbCPU  = self.backtraj_tab.checkParam()
+        errorCode, nbCPU = self.backtraj_tab.checkParam()
         if errorCode == 0:
             return
         # change tab
@@ -1428,11 +1418,12 @@ class MainFrame(Frame):
 
         showinfo("""Done!""", """The back-trajectory script is finish. See the terminal output if error was raised.""")
 
-if __name__ == '__main__':
-    root=Tk()
 
-    ICONS={
-               "about":PhotoImage(data=b'''
+if __name__ == '__main__':
+    root = Tk()
+
+    ICONS = {
+               "about": PhotoImage(data=b'''
     R0lGODlhIAAgAOf/AExOK05QLVRRNFRWMlhZL1lYQF1eNFpcWWRhRF9jQ19hXmdnPWdoVWNndGdn
     cGVodmhpZ2ttamtsdXNwOmpufGhwd25wbWxwfm1xf3Rydm10fG9zgXB0gnd6QnJ2hHZ4dXt7T3t9
     P3Z9kXl9i3SAmHyBhIWGR4WEaoCEkomJXX+GmnuHoIWIeXmIp4iJdIaIhYSIl36Ko42Lj5CPYn+O
@@ -1457,7 +1448,7 @@ if __name__ == '__main__':
     MkQ09+jjwTZOesjBKZ8AUUcgTwyTzhRGdCkQCxV0Ucs34pBTiwwZvKPmPx1sMUYJEjigwQcMIHDn
     PwaYkA042IxCRxwzDDCoExMwAc8+8AgDwgInDEqAEP7ksw84akQxAwGDDhCCF4cgs0okKSyQwKAm
     /7ggAAABBABAAZnC+g8OCuyxBwQv6DqQBQccEIGwBAGyB7J3BgQAOw=='''),
-                "run":PhotoImage(data=b'''
+        "run": PhotoImage(data=b'''
     R0lGODlhIAAgAOeSAEZHQ0pLR0pMR1BRTVNUUFVWUldYVVhZVVtcV15gXWBhXGFhXmVlYmZmYmZn
     YmdpY2tsZ21va3BwbXBxbXBybHN0cHh4d3p8eX1/e35/en+BfH+BfYGBfoGBf4GDfIaIhoyNiJOU
     kpOVkpaXk5aXlJqamZqbmZyemqKioKqrqaysq66urLO0srS1tLa2tbe3tbi5trm6t7q6ucDBvsDB
@@ -1477,7 +1468,7 @@ if __name__ == '__main__':
     mTLBAg4kDwEs4tPnDx88b9SEwSIFSpweBEwccch1i8wwYsSE8cIlSxg9LgKseChgkRk3dO7k4ZPn
     zh1CRh6IQPtwQCM6fQIVQpQo0aMvGzgIkVjAUR5AhhZBiiQoRQUbFBF8Dq2IkY4ILDwqWFSGzqEm
     GVC8dIDoDpsRIJK8/AfhEQwPOaYLpKDBhfaBM74Kix9Pvrz58wUDAgA7'''),
-                "save":PhotoImage(data=b'''
+        "save": PhotoImage(data=b'''
     R0lGODlhIAAgAOf8AAABACJKhSVOgydOiSJUjyxSjiNVkCZXkjBWjDFXjShZlFJUUSpalVRVU0lX
     aFVWVDVakFZYVTdck1dZVjlelVpcWTtgl1tdWkJfkTRjmS1kpjxhmD5imV1fXDBmqEFlnGBiX2Fj
     YEFomWJkYT1ppWNlYmRlYz1roURqm0VrnGZnZUFsqWdoZkdsnmhpZ0htnzpwrENuq0JvpTtxrWlr
@@ -1505,7 +1496,7 @@ if __name__ == '__main__':
     kM4R+nQi7rjk6gPAYuimu9gRqHC7wDngkitvJ+aqa+8RpLhrzhPz2Ovvv/rM88Qn7o4TSKejJizq
     FG5gwq0Jt3jTzTYRsrnMj8Ioqosts7jSCiuqmELKJ55sEocLApUSwgIst+zyyzC/DIIlAzWDiyqh
     bKLzzjz33DMpnqiSHFRECxQQADs='''),
-                "exit":PhotoImage(data=b'''
+    "exit": PhotoImage(data=b'''
     R0lGODlhIAAgAOfxAKQBAKMCBKUEAKUEBaYHBqcJB80AAKcKDs4ABM8ABKgMB9AAD6gMD6oOCKkP
     EKsRCdMHEckMFKUYFcERD68ZG7AaHLMdHrIeI7QfJMgdHNIcGrAmJLInJcohHdMeItQgIrQqLM4m
     JrcuLtEqL9UuLNcwLNkzNFZXVdM2MlZYVdo0NVdZVtU4NFhaV9U5OVlbWNY6OlpcWdc7O1tdWtg8
