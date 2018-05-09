@@ -8,10 +8,10 @@ dateMax = "2014"
 dateMin = "2010"
 prefix = "traj_OPE_"
 hourinthepast = 72
-concFile = "/home/webersa/Documents/PSCF/concentrations/OPE.csv"
-specie = "Levo" 
+concFile = "/home/samuel/Documents/IGE/PSCF/concentrations/OPE.csv"
+specie = "Levo"
 station = "OPE"
-mapMinMax = {"minlng": -25.0, "maxlng": 35.0, "minlat": 32.5, "maxlat": 64.0}
+mapMinMax = {"lonmin": -10.0, "lonmax": 35.0, "latmin": 32.5, "latmax": 64.0}
 cutWithRain = True 
 wfunc = True
 wfunc_type = "auto" 
@@ -21,9 +21,9 @@ threshold = 0.4
 resQuality = "l"
 plotBT = False
 plotPolar = False
-folder = "/home/webersa/Documents/PSCF/retrotrajectoires/OPE/"
+folder = "/home/samuel/Documents/IGE/PSCF/retrotrajectoires/OPE/"
 smoothplot = True
-pd_kwarg = {"sep": ";"}
+pd_kwarg = {"sep": ","}
 
 model = PSCF(station=station, specie=specie, lat0=lat0, lon0=lon0,
              folder=folder, prefix=prefix, add_hour=add_hour,
