@@ -8,7 +8,8 @@ import numpy as np
 import scipy.stats as sst
 from scipy.ndimage.filters import gaussian_filter
 import matplotlib.pyplot as plt
-from mpl_toolkits.basemap import Basemap
+# from mpl_toolkits.basemap import Basemap
+import cartopy.crs as ccrs
 import math
 import linecache
 import pandas as pd
@@ -124,12 +125,12 @@ class PSCF:
         self.cutWithRain = cutWithRain
         self.hourinthepast = hourinthepast
 
-        self.map = Basemap(projection='merc',
-                           llcrnrlat=mapMinMax["latmin"],
-                           urcrnrlat=mapMinMax["latmax"],
-                           llcrnrlon=mapMinMax["lonmin"],
-                           urcrnrlon=mapMinMax["lonmax"],
-                           resolution=resQuality)
+        # self.map = Basemap(projection='merc',
+        #                    llcrnrlat=mapMinMax["latmin"],
+        #                    urcrnrlat=mapMinMax["latmax"],
+        #                    llcrnrlon=mapMinMax["lonmin"],
+        #                    urcrnrlon=mapMinMax["lonmax"],
+        #                    resolution=resQuality)
     
 
     def toRad(self, x):
@@ -140,8 +141,7 @@ class PSCF:
         ax = plt.gca()
 
         if event.button == 1 and (event.xdata and event.ydata):
-            # x/y to lon/lat
-            lon, lat = self.map(event.xdata, event.ydata, inverse=True)
+            lon, lat = event.xdata, event.ydata
             lon = np.floor(lon*2)/2
             lat = np.floor(lat*2)/2
             print("Lon/Lat: %.2f / %.2f".format(lon, lat))
@@ -153,8 +153,7 @@ class PSCF:
                 df = df[:][df["conc"] > self.concCrit]
             for i in np.unique(df["dateBT"]):
                 tmp = self.bt[:][self.bt["dateBT"] == i]
-                xx, yy = self.map(tmp["lon"].as_matrix(), tmp["lat"].as_matrix())
-                ax.plot(xx, yy, '-', color='0.75')  # , marker='.')
+                ax.plot(tmp["lon"], tmp["lat"], '-', color='0.75')  # , marker='.')
                 print("date: %.10s | BT: %.13sh | [x]: %s".format(
                     tmp["date"].iloc[0],
                     tmp["dateBT"].iloc[0],
@@ -164,7 +163,6 @@ class PSCF:
             sys.stdout.flush()
             event.canvas.draw()
         if event.button == 3:
-            x_map, y_map = self.map(self.lon_map, self.lat_map)
 
             ax.lines = []
 
@@ -178,9 +176,8 @@ class PSCF:
             if self.smoothplot:
                 var = gaussian_filter(var, 1)
 
-            self.map.pcolormesh(x_map, y_map, var.T, cmap='hot_r')
-            x_station, y_station = self.map(self.lon0, self.lat0)
-            self.map.plot(x_station, y_station, 'o', color='0.75')
+            ax.pcolormesh(self.lon_map, self.lat_map, var.T, cmap='hot_r')
+            ax.plot(self.lon0, self.lat0, 'o', color='0.75')
             event.canvas.draw()
 
     def extractBackTraj(self):
@@ -333,21 +330,18 @@ class PSCF:
         """Plot a map of all trajectories.
         """
         figBT = plt.figure()
-        ax = plt.subplot(111)
+        ax = figBT.add_subplot(1, 1, 1, projection=ccrs.PlateCarree())
 
         if self.smoothplot:
             trajdensity = gaussian_filter(self.trajdensity_, 1)
         else:
             trajdensity = self.trajdensity_
 
-        self.map.drawcoastlines(color='black')
-        self.map.drawcountries(color='black')
+        ax.coastlines()
 
-        x_BT, y_BT = self.map(self.lon_map, self.lat_map)
-        pmesh = self.map.pcolormesh(x_BT, y_BT, trajdensity.T, cmap='hot_r')
+        pmesh = ax.pcolormesh(self.lon_map, self.lat_map, trajdensity.T, cmap='hot_r')
 
-        x_station, y_station = self.map(self.lon0, self.lat0)
-        self.map.plot(x_station, y_station, 'o', color='0.75')
+        ax.plot(self.lon0, self.lat0, 'o', color='0.75')
 
         plotTitle = "{station}\nBacktrajectories probability (log(n))".format(
             station=self.station
@@ -410,21 +404,19 @@ class PSCF:
         """Plot the PSCF map.
         """
         fig = plt.figure()  # keep handle for the onclick function
-        ax = plt.subplot(111)
+        ax = fig.add_subplot(1, 1, 1, projection=ccrs.PlateCarree())
 
         if self.smoothplot:
             PSCF = gaussian_filter(self.PSCF_, 1)
         else:
             PSCF = self.PSCF_
 
-        self.map.drawcoastlines()
-        self.map.drawcountries()
+        ax.coastlines()
+        # self.map.drawcountries()
 
-        x_map, y_map = self.map(self.lon_map, self.lat_map)
-        pmesh = self.map.pcolormesh(x_map, y_map, PSCF.T, cmap='hot_r')
+        pmesh = ax.pcolormesh(self.lon_map, self.lat_map, PSCF.T, cmap='hot_r')
 
-        x_station, y_station = self.map(self.lon0, self.lat0)
-        self.map.plot(x_station, y_station, 'o', color='0.75')
+        ax.plot(self.lon0, self.lat0, 'o', color='0.75')
 
         plotTitle = "{station}, {specie} > {concCrit}\nFrom {dmin} to {dmax}".format(
             station=self.station, specie=self.specie,
