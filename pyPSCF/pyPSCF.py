@@ -59,11 +59,7 @@ class PSCF:
     mapMinMax : dict
         Dictionary of minimun/maximum of lat/lon for the map.
         Example:
-        mapMinMax = {'latmin': 37.5,
-            'latmax': 60,
-            'lonmin': -10,
-            'lonmax': 20
-            }
+        mapMinMax = {'latmin': 37.5, 'latmax': 60, 'lonmin': -10, 'lonmax': 20}
         This example is the default (France centered).
     cutWithRain : boolean, default True
         Either or not cut the backtrajectory to the last rainning date.
