@@ -1,48 +1,40 @@
 {
+    "dirBackTraj": "/home/samuel/Documents/IGE/PSCF/retrotrajectoires/OPE/",
+    "Cfile": "/home/samuel/Documents/IGE/PSCF/concentrations/OPE.csv",
+    "station": "OPE",
     "prefix": "traj_OPE_",
-    "dateMax": [
-        "2014",
-        "11",
-        "04"
+    "backTraj": 72,
+    "add_hour": "[-6, -3, 0, 3, 6]",
+    "dateMin": "2010-01-01",
+    "dateMax": "2015-11-04",
+    "species": [
+        "Levo"
     ],
-    "plotBT": false,
+    "threshold": "[0.4]",
+    "percentileBool": true,
+    "percentile": "[75]",
+    "wF": true,
+    "wFmanual": false,
     "wFlim": [
         "0.30",
         "0.6",
         "0.85"
     ],
-    "wFmanual": false,
-    "dirBackTraj": "/home/webersa/Documents/PSCF/retrotrajectoires/OPE/",
-    "wF": true,
     "wFval": [
         "0.08",
         "0.35",
         "0.725",
         "1.0"
     ],
-    "add_hour": "[-6, -3, 0, 3, 6, 9, 12, 15, 18]",
     "smoothplot": true,
-    "percentileBool": false,
-    "mapMinMax": {
-        "lonmin": -10.0,
-        "latmax": 60.0,
-        "lonmax": 20.0,
-        "latmin": 37.5
-    },
+    "plotBT": false,
+    "plotPolar": true,
     "resQuality": "low",
-    "dateMin": [
-        "2010",
-        "01",
-        "01"
-    ],
-    "cutWithRain": true,
-    "threshold": "[0.4]",
-    "Cfile": "/home/webersa/Documents/PSCF/concentrations/OPE.csv",
-    "plotPolar": false,
-    "backTraj": 72,
-    "station": "OPE",
-    "species": [
-        "Levo"
-    ],
-    "percentile": "[75]"
+    "cutWithRain": false,
+    "mapMinMax": {
+        "latmin": 37.5,
+        "latmax": 60.0,
+        "lonmin": -20.0,
+        "lonmax": 20.0
+    }
 }
