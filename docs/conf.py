@@ -15,8 +15,21 @@
 #
 import os
 import sys
+from unittest.mock import MagicMock
 sys.path.insert(0, os.path.abspath('../'))
 
+
+class Mock(MagicMock):
+    @classmethod
+    def __getattr__(cls, name):
+        return MagicMock()
+
+
+MOCK_MODULES = ['matplotlib', 'matplotlib.pyplot', 'matplotlib.cbook',
+                'mpl_toolkits', 'mpl_toolkits.basemap', 'numpy', 'pandas',
+                'scipy', 'scipy.stats', 'scipy.ndimage',
+                'scipy.ndimage.filters']
+sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
 
 # -- Project information -----------------------------------------------------
 
@@ -47,7 +60,8 @@ extensions = [
     'sphinx.ext.napoleon',
     'sphinx.ext.viewcode',
 ]
-# autodoc_mock_imports = ["pyPSCF", "mpl_toolkits"]
+# autodoc_mock_imports = ["mpl_toolkits", "numpy", "scipy",
+#                         "scipy.ndimage", "scipy.ndimage.filters"]
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
 
