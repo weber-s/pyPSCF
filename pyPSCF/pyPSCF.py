@@ -59,8 +59,7 @@ class PSCF:
     mapMinMax : dict
         Dictionary of minimun/maximum of lat/lon for the map.
         Example:
-        mapMinMax = {
-            'latmin': 37.5,
+        mapMinMax = {'latmin': 37.5,
             'latmax': 60,
             'lonmin': -10,
             'lonmax': 20
@@ -135,46 +134,42 @@ class PSCF:
 
     def toRad(self, x):
         return x*math.pi/180
-    # ===== Plot event                          ===============================
+
     def onclick(self, event, plotType):
         """ Find the BT which pass through the clicked cell."""
         ax = plt.gca()
-    
-        if event.button == 1 and (event.xdata != None and event.ydata != None):
+
+        if event.button == 1 and (event.xdata and event.ydata):
             # x/y to lon/lat
             lon, lat = self.map(event.xdata, event.ydata, inverse=True)
             lon = np.floor(lon*2)/2
             lat = np.floor(lat*2)/2
-            print("Lon/Lat: %.2f / %.2f" %(lon, lat))
+            print("Lon/Lat: %.2f / %.2f".format(lon, lat))
             # find all the BT
             lonNorm = np.floor(self.bt["lon"]*2)/2
             latNorm = np.floor(self.bt["lat"]*2)/2
             df = self.bt[((lonNorm == lon) & (latNorm == lat))]
             if plotType == "PSCF":
-                df = df[:][df["conc"]>self.concCrit]
+                df = df[:][df["conc"] > self.concCrit]
             for i in np.unique(df["dateBT"]):
-                tmp = self.bt[:][self.bt["dateBT"]==i]
-                xx,yy = self.map(tmp["lon"].as_matrix(),tmp["lat"].as_matrix())
-                ax.plot(xx,yy, '-',color='0.75')#, marker='.')
-                print("date: %.10s | BT: %.13sh | [x]: %s"%(tmp["date"].iloc[0],
-                                                            tmp["dateBT"].iloc[0],
-                                                            tmp["conc"].iloc[0]))
+                tmp = self.bt[:][self.bt["dateBT"] == i]
+                xx, yy = self.map(tmp["lon"].as_matrix(), tmp["lat"].as_matrix())
+                ax.plot(xx, yy, '-', color='0.75')  # , marker='.')
+                print("date: %.10s | BT: %.13sh | [x]: %s".format(
+                    tmp["date"].iloc[0],
+                    tmp["dateBT"].iloc[0],
+                    tmp["conc"].iloc[0])
+                )
             print("")
             sys.stdout.flush()
             event.canvas.draw()
         if event.button == 3:
-            # lon = np.arange(self.mapMinMax["minlon"],
-            #                 self.mapMinMax["maxlon"]+0.01, 0.5) #+0.1 in order to have the max in the array
-            # lat = np.arange(self.mapMinMax["minlat"], 
-            #                 self.mapMinMax["maxlat"]+0.01, 0.5)
-            # lon_map, lat_map = np.meshgrid(lon, lat)
-
             x_map, y_map = self.map(self.lon_map, self.lat_map)
 
-            ax.lines=[]
+            ax.lines = []
 
             if plotType == "allBT":
-                var = self.trajdensity_ 
+                var = self.trajdensity_
             elif plotType == "PSCF":
                 var = self.PSCF_
             else:
@@ -183,24 +178,15 @@ class PSCF:
             if self.smoothplot:
                 var = gaussian_filter(var, 1)
 
-            pmesh=self.map.pcolormesh(x_map, y_map, var.T, cmap='hot_r')
+            self.map.pcolormesh(x_map, y_map, var.T, cmap='hot_r')
             x_station, y_station = self.map(self.lon0, self.lat0)
             self.map.plot(x_station, y_station, 'o', color='0.75')
             event.canvas.draw()
 
     def extractBackTraj(self):
         """
-        Sum up back trajectories file into a pandas DataFrame.
-
-        Parameters
-        ----------
-        date :
-        conc : 
-        add_hour :
-        folder :
-        prefix :
-        run :
-        rainBool:
+        Sum up back trajectories file into a pandas DataFrame according to the
+        class parameters.
 
         Return
         ------
@@ -229,37 +215,40 @@ class PSCF:
                     idx_names = np.hstack((idx_names, meteo_idx[1:]))
 
                     traj = pd.read_table(datafile,
-                                         delim_whitespace = True,
-                                         header = None,
-                                         names = idx_names,
-                                         skiprows = nb_line_to_skip+4,
-                                         nrows = self.hourinthepast)
+                                         delim_whitespace=True,
+                                         header=None,
+                                         names=idx_names,
+                                         skiprows=nb_line_to_skip+4,
+                                         nrows=self.hourinthepast)
                     lat = traj["lat"]
                     lon = traj["lon"]
                     rain = traj["RAINFALL"]
 
                     # if it was raining at least one time, we cut it
-                    if self.cutWithRain and any(rain>0):
-                        idx_rain = np.where(rain!=0)[0][0]
+                    if self.cutWithRain and any(rain > 0):
+                        idx_rain = np.where(rain != 0)[0][0]
                         lat = lat[:idx_rain]
                         lon = lon[:idx_rain]
 
-                    dftmp = pd.DataFrame(data={"date":date,
-                                               "dateBT":date+dt.timedelta(hours=hour),
-                                               "conc":conc,
-                                               "lon":lon,
-                                               "lat":lat})
-                    
-                    df = pd.concat([df,dftmp])
+                    dftmp = pd.DataFrame(data={
+                        "date": date,
+                        "dateBT": date+dt.timedelta(hours=hour),
+                        "conc": conc,
+                        "lon": lon,
+                        "lat": lat
+                    })
+
+                    df = pd.concat([df, dftmp])
 
         return df
 
     def run(self):
-        specie      = self.specie
-        percentile  = self.percentile
-        threshold   = self.threshold
-        data        = self.data
-        mapMinMax   = self.mapMinMax
+        """Run the PSCF model"""
+        specie = self.specie
+        percentile = self.percentile
+        threshold = self.threshold
+        data = self.data
+        mapMinMax = self.mapMinMax
 
         # extract relevant info
         # date format for the file "YYYY-MM-DD HH:MM"
@@ -277,7 +266,7 @@ class PSCF:
         else:
             raise ValueError("'percentile' or 'threshold' shoud be specified.'")
         self.concCrit = concCrit
-        
+
         # ===== Extract all back-traj needed        ===========================
         self.bt = self.extractBackTraj()
 
@@ -286,7 +275,7 @@ class PSCF:
         self.lon = np.arange(mapMinMax["lonmin"], mapMinMax["lonmax"]+0.01, 0.5) 
         self.lat = np.arange(mapMinMax["latmin"], mapMinMax["latmax"]+0.01, 0.5)
         self.lon_map, self.lat_map = np.meshgrid(self.lon, self.lat)
-        
+
         ngrid, xedges, yedges = np.histogram2d(self.bt["lon"],
                                                self.bt["lat"],
                                                bins=[
@@ -295,9 +284,9 @@ class PSCF:
                                                    np.hstack((self.lat,
                                                               self.lat[-1]+0.5))
                                                ])
-        maskgtconcCrit = self.bt["conc"]>=concCrit
-        mgrid, xedges, yedges = np.histogram2d(self.bt.loc[maskgtconcCrit,"lon"],
-                                               self.bt.loc[maskgtconcCrit,"lat"],
+        maskgtconcCrit = self.bt["conc"] >= concCrit
+        mgrid, xedges, yedges = np.histogram2d(self.bt.loc[maskgtconcCrit, "lon"],
+                                               self.bt.loc[maskgtconcCrit, "lat"],
                                                bins=[
                                                    np.hstack((self.lon,
                                                               self.lon[-1]+0.5)),
@@ -305,7 +294,7 @@ class PSCF:
                                                               self.lat[-1]+0.5))
                                                ])
 
-        not0 = np.where(ngrid!=0)
+        not0 = np.where(ngrid != 0)
 
         PSCF = np.zeros(np.shape(ngrid))
         PSCF[not0] = mgrid[not0]/ngrid[not0]
@@ -316,6 +305,10 @@ class PSCF:
         # ===== Weighting function
         if self.wfunc:
             wF = np.zeros(np.shape(ngrid))
+            # TODO: "manual" is not yet implemented in the API
+            if self.wfunc_type == "manual":
+                self.wfunc_type = "auto"
+
             if self.wfunc_type == "manual":
                 wFlim=np.array([ float(param["wFlim"][0]), float(param["wFlim"][1]), float(param["wFlim"][2]) ]) *trajdensity.max()
                 wFval=np.array([ float(param["wFval"][0]), float(param["wFval"][1]), float(param["wFval"][2]), float(param["wFval"][3]) ])
@@ -325,23 +318,22 @@ class PSCF:
                 wF[ np.where((trajdensity >= wFlim[1]) & (trajdensity<wFlim[2]))]=wFval[2]
                 wF[ np.where( trajdensity >= wFlim[2]) ]=wFval[3]
             elif self.wfunc_type == "auto":
-                #m0 = np.where(mgrid !=0)
-                #wF[m0] = np.l_og(mgrid[m0])/np.log(ngrid.max())
+                # m0 = np.where(mgrid !=0)
+                # wF[m0] = np.log(mgrid[m0])/np.log(ngrid.max())
                 wF[not0] = np.log(ngrid[not0])/np.log(ngrid.max())
 
             PSCF = PSCF * wF
 
         self.ngrid_ = ngrid
-        self.mgrid_ = mgrid 
+        self.mgrid_ = mgrid
         self.PSCF_ = PSCF
         self.trajdensity_ = trajdensity
-
 
     def plot_backtraj(self):
         """Plot a map of all trajectories.
         """
-        figBT=plt.figure()
-        ax=plt.subplot(111)
+        figBT = plt.figure()
+        ax = plt.subplot(111)
 
         if self.smoothplot:
             trajdensity = gaussian_filter(self.trajdensity_, 1)
@@ -363,7 +355,7 @@ class PSCF:
         plt.title(plotTitle)
 
 
-        cid = figBT.canvas.mpl_connect('button_press_event', 
+        cid = figBT.canvas.mpl_connect('button_press_event',
                                        lambda event: self.onclick(event, "allBT"))
         figBT.canvas.set_window_title(self.station+"_allBT")
 
@@ -373,40 +365,41 @@ class PSCF:
         # change the coordinate system to polar from the station point
         deltalon = self.lon0 - self.lon
         mesh_deltalon, mesh_lat = np.meshgrid(deltalon, self.lat)
-        mesh_lon, _     = np.meshgrid(self.lon, self.lat)
-        mesh_deltalon   = self.toRad(mesh_deltalon)
-        mesh_lon        = self.toRad(mesh_lon)
-        mesh_lat        = self.toRad(mesh_lat)
+        mesh_lon, _ = np.meshgrid(self.lon, self.lat)
+        mesh_deltalon = self.toRad(mesh_deltalon)
+        mesh_lon = self.toRad(mesh_lon)
+        mesh_lat = self.toRad(mesh_lat)
 
-        a = np.sin(mesh_deltalon) * np.cos(mesh_lat)     
+        a = np.sin(mesh_deltalon) * np.cos(mesh_lat)
         b = np.cos(self.lat0*math.pi/180)*np.sin(mesh_lat) \
             - np.sin(self.lat0*math.pi/180)*np.cos(mesh_lat)*np.cos(mesh_deltalon)
         bearing = np.arctan2(a, b)
         bearing += math.pi/2                        # change the origin: from N to E
-        bearing[np.where(bearing<0)] += 2*math.pi   # set angle between 0 and 2pi 
+        bearing[np.where(bearing < 0)] += 2*math.pi   # set angle between 0 and 2pi 
         bearing = bearing.T
-        
-        # select and count the BT in a given Phi range 
+
+        # select and count the BT in a given Phi range
         mPhi = list()
-        theta = self.toRad(np.arange(0,361,22.5))
+        theta = self.toRad(np.arange(0, 361, 22.5))
         mPhi.append( np.sum( self.mgrid_[ np.where(bearing <= theta[1]) ] ))
         for i in range(1, len(theta)-1):
-            mPhi.append(np.sum(self.mgrid_[np.where((theta[i]<bearing) & (bearing <=theta[i+1]))]))
+            mPhi.append(np.sum(self.mgrid_[np.where((theta[i] < bearing) &
+                                                    (bearing <= theta[i+1]))]))
         # convert it in percent
         values = mPhi/np.sum(self.mgrid_)*100
 
         # ===== Plot part
-        figPolar=plt.figure()
-        xticklabel=['E', 'NE', 'N', 'NO', 'O', 'SO', 'S', 'SE']
-    
+        figPolar = plt.figure()
+        xticklabel = ['E', 'NE', 'N', 'NO', 'O', 'SO', 'S', 'SE']
+
         axPolar = plt.subplot(111, projection='polar')
         bars = axPolar.bar( theta[:-1], values, width=math.pi/8, align="edge")
         axPolar.xaxis.set_ticklabels(xticklabel)
-        axPolar.yaxis.set_ticks(range(0,int(max(values)),5))
-    
+        axPolar.yaxis.set_ticks(range(0,int(max(values)), 5))
+
         plotTitle = "{station}, {specie} > {concCrit}\nFrom {dmin} to {dmax}".format(
             station=self.station, specie=self.specie, concCrit=self.concCrit,
-            dmin=min(self.date).strftime('%Y/%m/%d'), 
+            dmin=min(self.date).strftime('%Y/%m/%d'),
             dmax=max(self.date).strftime('%Y/%m/%d')
         )
         plt.title(plotTitle)
@@ -416,9 +409,9 @@ class PSCF:
     def plot_PSCF(self):
         """Plot the PSCF map.
         """
-        fig=plt.figure()  # keep handle for the onclick function
-        ax=plt.subplot(111)
-        
+        fig = plt.figure()  # keep handle for the onclick function
+        ax = plt.subplot(111)
+
         if self.smoothplot:
             PSCF = gaussian_filter(self.PSCF_, 1)
         else:
@@ -426,10 +419,10 @@ class PSCF:
 
         self.map.drawcoastlines()
         self.map.drawcountries()
-        
+
         x_map, y_map = self.map(self.lon_map, self.lat_map)
-        pmesh        = self.map.pcolormesh(x_map, y_map, PSCF.T, cmap='hot_r')
-        
+        pmesh = self.map.pcolormesh(x_map, y_map, PSCF.T, cmap='hot_r')
+
         x_station, y_station = self.map(self.lon0, self.lat0)
         self.map.plot(x_station, y_station, 'o', color='0.75')
 
@@ -440,23 +433,7 @@ class PSCF:
             dmax=max(self.date).strftime('%Y/%m/%d')
         )
         plt.title(plotTitle)
-            
+
         cid = fig.canvas.mpl_connect('button_press_event',
                                      lambda event: self.onclick(event, "PSCF"))
         fig.canvas.set_window_title(self.station+self.specie)
-
-# This part is only if you want to run this file via command line.
-# Be sure to have a correct 'localParamPSCF.json' file before running it... otherwhise you will have many error messages.
-# The syntaxe is : python2 PSCF4GUI.py *args
-# where *args is an integer and refer to the specie in 'species' in 'localParamPSCF.json'.
-# If no arg is given, assume that the first specie in 'species' is wanted.
-if __name__ == '__main__':
-    # plt.interactive(True)
-    print("tututu")
-    #if len(sys.argv)==1:
-    #    p=Process(target=PSCF, args=(0,))
-    #    p.start()
-    #else:
-    #    for i in sys.argv[1:]:
-    #        p= Process(target=PSCF, args=(int(i),))
-    #        p.start()
