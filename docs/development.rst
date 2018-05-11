@@ -1,22 +1,32 @@
 Development
 -----------
 
-Feel free to contribute to this library.
+This tool is a work-in-progress tool. Feel free to contribute. Here is a
+non-exhaustif list of TODO:
+
+- add tests
+- add examples
+- expand documentation
+- multi-site PSCF
+- add windrose tool in the GUI
+- add a propoer setup.py file... and use pypi
+- ...
+
+Code is hosted in github at https://github.com/weber-s/pyPSCF/ .
 
 Issues
 ~~~~~~
 
-You can submit issues using
-https://github.com/weber-s/pyPSCF/issues
+You can submit issues or suggestion directly throught github using the `issue
+tracker <https://github.com/weber-s/pyPSCF/issues>`
 
-Clone
-~~~~~
+Collaborating
+~~~~~~~~~~~~~
 
-You can clone repository to try to fix issues yourself using:
+-  Fork repository
+-  Create a branch which fix a given issue
+-  Submit pull requests
 
-.. code:: bash
-
-    $ git clone https://github.com/weber-s/pyPSCF.git
 
 .. Run unit tests
 .. ~~~~~~~~~~~~~~
