@@ -1,6 +1,16 @@
 Install
 -------
 
+pyPSCF is written in python 3 so the first thing to do is to... well, install
+python.
+
+- Linux: it should be already installed. However, depending on your
+  distribution, you may have python 2 by default. We do not ensure the
+  compatibility.
+- Windows: just use python throught anaconda. It's way more easier. But use
+  anaconda for python 3.
+- macOS: I do not known. If someone do, please edit this line :).
+
 Requirements
 ~~~~~~~~~~~~
 
@@ -12,8 +22,8 @@ pyPSCF use the following library:
 -  pandas https://pandas.pydata.org/
 -  cartopy http://scitools.org.uk/cartopy/
 
-The first fourth are quite heavily use and easy to install (or already
-install). You can use pip to install them:
+The first fourth are quite heavily used and easy to install (or already
+installed). You can use pip to install them:
 
     pip install matplotlib numpy scipy pandas
 
@@ -26,10 +36,6 @@ Due to some cartopy related issue, you may also need `cython`. Install it via
 conda or pip such as:
 
     pip install cython
-
-Installation
-~~~~~~~~~~~~
-
 
 Install latest release version via pip
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
