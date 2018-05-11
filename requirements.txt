@@ -3,4 +3,6 @@ numpy
 scipy
 matplotlib
 scipy
+cython
+pyproj
 cartopy

@@ -26,7 +26,7 @@ class Mock(MagicMock):
 
 
 MOCK_MODULES = ['matplotlib', 'matplotlib.pyplot', 'matplotlib.cbook',
-                'mpl_toolkits', 'mpl_toolkits.basemap', 'numpy', 'pandas',
+                'cython', 'cartopy', 'cartopy.crs', 'numpy', 'pandas',
                 'scipy', 'scipy.stats', 'scipy.ndimage',
                 'scipy.ndimage.filters']
 sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
