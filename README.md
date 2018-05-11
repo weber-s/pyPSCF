@@ -1,3 +1,5 @@
+[![Documentation Status](https://readthedocs.org/projects/pypscf/badge/?version=latest)](http://pypscf.readthedocs.io/en/latest/?badge=latest)
+
 # pyPSCF
 The Potential Source Contribution Function is a tool to investigate the sources
 of chemical species in the atmosphere.
