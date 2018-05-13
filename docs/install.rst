@@ -14,6 +14,15 @@ python.
 Requirements
 ~~~~~~~~~~~~
 
+Hysplit
+^^^^^^^
+
+The GUI has the ability to compute HYSPLIT backtrajectories. To do so, you will
+need Hysplit installed.
+
+Python
+^^^^^^
+
 pyPSCF use the following library:
 
 -  matplotlib https://matplotlib.org/
