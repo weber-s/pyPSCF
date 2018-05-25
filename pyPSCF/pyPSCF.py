@@ -9,6 +9,7 @@ import scipy.stats as sst
 from scipy.ndimage.filters import gaussian_filter
 import matplotlib.pyplot as plt
 import cartopy.crs as ccrs
+import cartopy.feature as cfeature
 import math
 import linecache
 import pandas as pd
@@ -65,7 +66,7 @@ class PSCF:
         Either or not cut the backtrajectory to the last rainning date.
     hourinthepast : integer, default 72
         Number of hour considered for the backtrajectory life.
-    resQuality : str, default 'l'
+    resQuality : '110m' or '50m', default '110m'
         The quality of the map.
     smoothplot : boolean, default True
         Use a gaussian filter to smooth the map plot.
@@ -83,7 +84,7 @@ class PSCF:
     """
     def __init__(self, station, specie, lat0, lon0, folder, prefix, add_hour,
                  concFile, dateMin, dateMax, percentile=75, threshold=None,
-                 wfunc=True, wfunc_type="auto", resQuality="l", smoothplot=True,
+                 wfunc=True, wfunc_type="auto", resQuality="110m", smoothplot=True,
                  mapMinMax=None, cutWithRain=True, hourinthepast=72,
                  plotBT=True, plotPolar=True, pd_kwarg=None):
 
@@ -249,8 +250,11 @@ class PSCF:
             concCrit = threshold
         else:
             raise ValueError("'percentile' or 'threshold' shoud be specified.'")
+        # if len(concCrit)==1:
+        #     concCrit = concCrit[0]
         self.concCrit = concCrit
-
+        
+        
         # ===== Extract all back-traj needed        ===========================
         self.bt = self.extractBackTraj()
 
@@ -332,7 +336,9 @@ class PSCF:
         else:
             trajdensity = self.trajdensity_
 
-        ax.coastlines()
+        ax.coastlines(resolution=self.resQuality)
+        ax.add_feature(cfeature.BORDERS.with_scale(self.resQuality),
+                       edgecolor='grey')
 
         pmesh = ax.pcolormesh(self.lon_map, self.lat_map, trajdensity.T, cmap='hot_r')
 
@@ -415,7 +421,9 @@ class PSCF:
         else:
             PSCF = self.PSCF_
 
-        ax.coastlines()
+        ax.coastlines(resolution=self.resQuality)
+        ax.add_feature(cfeature.BORDERS.with_scale(self.resQuality),
+                       edgecolor='grey')
 
         pmesh = ax.pcolormesh(self.lon_map, self.lat_map, PSCF.T, cmap='hot_r')
 

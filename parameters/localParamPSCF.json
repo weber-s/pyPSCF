@@ -1,40 +1,40 @@
 {
-    "dirBackTraj": "/home/samuel/Documents/IGE/PSCF/retrotrajectoires/OPE/",
-    "Cfile": "/home/samuel/Documents/IGE/PSCF/concentrations/OPE.csv",
+    "resQuality": "10m",
+    "dateMax": "2015-11-04",
+    "smoothplot": true,
+    "wFmanual": false,
+    "backTraj": 72,
+    "Cfile": "/home/webersa/Documents/BdD/BdD_PM/PMF_results/SOURCES/GRE-fr/GRE-fr_PMF_PM10_contributions_SOURCES.csv",
+    "species": [
+        "Biomass burning"
+    ],
     "station": "OPE",
     "prefix": "traj_OPE_",
-    "backTraj": 72,
-    "add_hour": "[-6, -3, 0, 3, 6]",
-    "dateMin": "2010-01-01",
-    "dateMax": "2015-11-04",
-    "species": [
-        "Levo"
-    ],
-    "threshold": "[0.4]",
-    "percentileBool": true,
     "percentile": "[75]",
+    "dateMin": "2010-01-01",
+    "plotBT": true,
+    "add_hour": "[-6, -3, 0, 3, 6, 9, 12, 15, 18]",
+    "percentileBool": true,
+    "plotPolar": false,
     "wF": true,
-    "wFmanual": false,
-    "wFlim": [
-        "0.30",
-        "0.6",
-        "0.85"
-    ],
+    "mapMinMax": {
+        "latmin": 35.0,
+        "lonmax": 25.0,
+        "latmax": 65.0,
+        "lonmin": -20.0
+    },
+    "threshold": "[0.4, 12.0]",
     "wFval": [
         "0.08",
         "0.35",
         "0.725",
         "1.0"
     ],
-    "smoothplot": true,
-    "plotBT": false,
-    "plotPolar": true,
-    "resQuality": "low",
-    "cutWithRain": false,
-    "mapMinMax": {
-        "latmin": 37.5,
-        "latmax": 60.0,
-        "lonmin": -20.0,
-        "lonmax": 20.0
-    }
+    "wFlim": [
+        "0.30",
+        "0.6",
+        "0.85"
+    ],
+    "dirBackTraj": "/home/webersa/Documents/PSCF/retrotrajectoires/OPE/",
+    "cutWithRain": false
 }

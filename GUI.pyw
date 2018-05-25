@@ -10,6 +10,7 @@ import matplotlib.pyplot as plt
 from multiprocessing import Process
 
 from pyPSCF import pyPSCF
+from pyPSCF.BackTrajHysplit import *
 
 if sys.version_info.major >= 3:
     from tkinter import *
@@ -675,7 +676,7 @@ class BacktrajTab(Frame):
                             padx=5,
                             pady=5)
         self.cpu = IntVar()
-        self.cpu.set(cpu_count()-1)
+        self.cpu.set(os.cpu_count()-1)
         self.CPULabel = Label(self.cpu_frame, text="Number of CPU")
         self.CPULabel.grid(row=0, column=0, sticky=W, padx=5, pady=5)
         self.CPUEntry = EntryContext(self.cpu_frame, width=5, textvariable=self.cpu)
@@ -1058,7 +1059,7 @@ class PSCFTab(Frame):
         self.resQuality.set(self.param["resQuality"])
         self.resQualityChoice = OptionMenu(self.BT_frame, self.resQuality,
                                            self.param["resQuality"],
-                                           "crude", "low", "intermediate", "high", "full")
+                                           "110m", "50m", "10m")
         self.resQualityChoice.grid(row=1, column=4, sticky=W, padx=5, pady=5)
 
         # ===== First check ==================================================
@@ -1094,11 +1095,16 @@ class PSCFTab(Frame):
         # Check wf
         # TODO
         # Check Species
-        # for specie in self.param["species"]:
+        f = open(self.param["Cfile"]).readlines()
+        text="The specie \"{specie}\" is not found in the concentration file."
+        for specie in self.param["species"]:
+            if not any([specie in ff for ff in f]):
+                showinfo("""Error""", text.format(specie=specie))
+                return 0
+
         #     sp  = specie2study(self.param["Cfile"], specie)
         #     if sp == -999:
         #         header=np.genfromtxt(self.param["Cfile"], delimiter=';', max_rows=1, dtype=str)
-        #         text="The specie \""+specie+"\" is not found in the concentration file.\n\nPossible species are:\n"+ ", ".join(list(header[1:]))
         #         showinfo("""Error""", text) 
         #         return 0
         # Check length of parameter
@@ -1351,6 +1357,9 @@ class MainFrame(Frame):
         elif active_tab == 1:
             self.PSCF_tab.on_save()
 
+
+
+
     def on_run_PSCF(self):
         errorCode = self.PSCF_tab.check_param()
         if errorCode == 0:
@@ -1359,11 +1368,13 @@ class MainFrame(Frame):
         with open('parameters'+os.sep+'localParamPSCF.json', 'r') as dataFile:
             param = json.load(dataFile)
 
+
+
         # change tab
         # self.notebook.select(2)
         print("PSCF starts... Please wait.")
         for specie in range(len(param["species"])):
-            model = pyPSCF.PSCF(
+            args = dict(
                 station=param["station"],
                 specie=param["species"][specie],
                 lat0=self.PSCF_tab.locStation[param["station"]][0],
@@ -1371,9 +1382,9 @@ class MainFrame(Frame):
                 folder=param["dirBackTraj"],
                 prefix=param["prefix"],
                 add_hour=json2arr(param["add_hour"], np.float),
-                resQuality=param["resQuality"][0],
-                percentile=json2arr(param["percentile"], np.float)[specie],
-                threshold=json2arr(param["threshold"], np.float)[specie],
+                resQuality=param["resQuality"],
+                percentile=json2arr(param["percentile"], np.float),
+                threshold=json2arr(param["threshold"], np.float),
                 concFile=param["Cfile"],
                 dateMin=param["dateMin"],
                 dateMax=param["dateMax"],
@@ -1385,9 +1396,20 @@ class MainFrame(Frame):
                 hourinthepast=param["backTraj"],
                 plotBT=param["plotBT"],
                 plotPolar=param["plotPolar"],
-                pd_kwarg={"sep": ","},
+                pd_kwarg={"sep": ";"}
             )
-            # param should follow the init signature of pyPSCF.PSCF
+            for var in ["threshold", "percentile"]:
+                if (len(param["species"])>1) & (len(args[var])>1):
+                    args[var] = args[var][specie]
+                else:
+                    args[var] = args[var][0]
+            if param["percentileBool"]:
+                args["threshold"] = None
+            else:
+                args["percentile"] = None
+
+            model = pyPSCF.PSCF(**args)
+            # args should follow the init signature of pyPSCF.PSCF
 
             model.run()
             if model.plotBT:
@@ -1395,9 +1417,7 @@ class MainFrame(Frame):
             if model.plotPolar:
                 model.plot_PSCF_polar()
             model.plot_PSCF()
-            plt.show()
-            # p = Process(target=PSCF, args=(specie,))
-            # p.start()
+        plt.show()
 
     def on_run_backtraj(self):
         # check
@@ -1408,7 +1428,7 @@ class MainFrame(Frame):
         if errorCode == 0:
             return
         # change tab
-        self.notebook.select(2)
+        # self.notebook.select(2)
         # Compute the Back Traj
         for i in range(nbCPU):
             p = Process(target=BT)
@@ -1417,7 +1437,6 @@ class MainFrame(Frame):
         p.join()
 
         showinfo("""Done!""", """The back-trajectory script is finish. See the terminal output if error was raised.""")
-
 
 if __name__ == '__main__':
     root = Tk()
