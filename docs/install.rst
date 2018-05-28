@@ -12,16 +12,21 @@ python.
 - macOS: I do not known. If someone do, please edit this line :).
 
 Requirements
-~~~~~~~~~~~~
+````````````
 
 Hysplit
-^^^^^^^
+'''''''
 
 The GUI has the ability to compute HYSPLIT backtrajectories. To do so, you will
 need Hysplit installed.
 
+Hysplit is freely available for Windows, Linux and Mac on the NOAA website 
+https://ready.arl.noaa.gov/HYSPLIT.php .
+
+You may also need the NCEP reanalyse GDAS, available in by the NOAA.
+
 Python
-^^^^^^
+''''''
 
 pyPSCF use the following library:
 
@@ -36,6 +41,12 @@ installed). You can use pip to install them:
 
     pip install matplotlib numpy scipy pandas
 
+Cartopy
+.......
+
+With pip
+~~~~~~~~
+
 Cartopy is a bit tricky to install as it requires an extra library: GEOS.
 In debian related system, install it via:
 
@@ -46,6 +57,20 @@ conda or pip such as:
 
     pip install cython
 
+With conda/anaconda
+~~~~~~~~~~~~~~~~~~~
+
+Cartopy is not included in default anaconda installation. You have to add it
+mannually with
+    
+    conda install -c conda-forge cartopy 
+
 Install latest release version via pip
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+``````````````````````````````````````
+
+TODO
+
+Install latest release version via pip
+``````````````````````````````````````
+
 TODO
