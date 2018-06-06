@@ -12,7 +12,7 @@ Welcome to pyPSCF's documentation!
 
    Install <install.rst>
    Development <development.rst>
-   API <api.rst>
+   API <modules.rst>
 
 
 Indices and tables

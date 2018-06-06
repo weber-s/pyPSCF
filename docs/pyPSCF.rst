@@ -20,14 +20,6 @@ pyPSCF.pyPSCF module
     :undoc-members:
     :show-inheritance:
 
-pyPSCF.test module
-------------------
-
-.. automodule:: pyPSCF.test
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 
 Module contents
 ---------------
