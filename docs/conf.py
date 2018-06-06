@@ -15,9 +15,15 @@
 #
 import os
 import sys
+from unittest.mock import MagicMock
 sys.path.insert(0, os.path.abspath('../'))
 
-
+MOCK_MODULES = ['matplotlib', 'matplotlib.pyplot', 'matplotlib.cbook',
+                'cython', 'cartopy', 'cartopy.crs', 'cartopy.feature',
+                'numpy', 'pandas',
+                'scipy', 'scipy.stats', 'scipy.ndimage',
+                'scipy.ndimage.filters']
+sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
 # -- Project information -----------------------------------------------------
 
 project = 'pyPSCF'
