@@ -1,5 +1,7 @@
 import os
 import sys
+import numpy as np
+import time
 import datetime as dt
 import calendar
 import re
@@ -7,7 +9,32 @@ import json
 import shutil
 
 
+def file_exists(path):
+    return os.path.exists(path)
 
+def update_date(YY, MM, DD, HH, stepHH):
+    HH=int(HH)+int(stepHH)
+    if HH>=24:
+        HH="00"
+        DD=int(DD)+1
+        if DD == int(calendar.monthrange(int(YY)+2000, int(MM))[1]+1):
+            DD="01"
+            MM=int(MM)+1
+            if MM==13:
+                MM="01"
+                YY=int(YY)+1
+    HH=str(HH)
+    DD=str(DD)
+    MM=str(MM)
+    YY=str(YY)
+    if len(HH)==1:
+        HH="0"+HH
+    if len(DD)==1:
+        DD="0"+DD
+    if len(MM)==1:
+        MM="0"+MM
+
+    return (YY, MM, DD, HH)
 
 def BT():
     """
@@ -58,26 +85,7 @@ def BT():
 #            print("Script exit")
 #            return 0
 
-
-    if HH>=24:
-        HH="00"
-        DD=int(DD)+1
-        if DD == int(calendar.monthrange(int(YY)+2000, int(MM))[1]+1):
-            DD="01"
-            MM=int(MM)+1
-            if MM==13:
-                MM="01"
-                YY=int(YY)+1
-    HH=str(HH)
-    DD=str(DD)
-    MM=str(MM)
-    YY=str(YY)
-    if len(HH)==1:
-        HH="0"+HH
-    if len(DD)==1:
-        DD="0"+DD
-    if len(MM)==1:
-        MM="0"+MM
+    YY, MM, DD, HH = update_date(YY, MM, DD, HH, param["stepHH"])
 
     # ===== Write the SETUP.CFG file                    =======================
     shutil.copy(os.path.normpath('parameters/SETUP_backTraj.CFG'), dirHysplit+"SETUP.CFG")
@@ -85,101 +93,76 @@ def BT():
     os.chdir(dirHysplit)
     # ===== Compute the Back Traj                       =======================
     while dt.datetime(YYend+2000, MMend, DDend, HHend) >= dt.datetime(int(YY)+2000, int(MM), int(DD), int(HH)):
-        if not os.path.exists(dirOutput+"traj_"+param["station"]+"_"+YY+MM+DD+HH):
-            ## create file name
-            #file1, previous month
-            if MM=="01":
-                mon="dec"
-                year=str(int(YY)-1)
-            else:
-                mon=dt.datetime(int(YY)+2000, int(MM)-1, 1).strftime("%b").lower()
-                year=YY
-            file1="gdas1."+mon+year+".w5"
-            if not os.path.exists(dirGDAS+file1):
-                file1="gdas1."+mon+year+".w4"
-            #other file (all the current month)
-            mon=dt.datetime(int(YY)+2000, int(MM), 1).strftime("%b").lower()
-            year=YY
-            file2="gdas1."+mon+year+".w1"
-            file3="gdas1."+mon+year+".w2"
-            file4="gdas1."+mon+year+".w3"
-            file5="gdas1."+mon+year+".w4"
-            file6="gdas1."+mon+year+".w5"
-            if not os.path.exists(dirGDAS+file6):
-                file6=''
-    
-            #Write the CONTROL file
-            f = open(CONTROL, 'w')
-            f.write("%s %s %s %s\n" % (YY, MM, DD, HH))
-            f.write("1\n")
-            f.write("%s %s %s\n" % (param["lat"], param["lon"], param["alt"]))
-            f.write("%s\n" % param["hBT"])
-            f.write("0\n")
-            f.write("10000.0\n")
-            if file6 != '':
-                f.write("6\n")
-            else:
-                f.write("5\n")
-            f.write("%s\n" % dirGDAS)
-            f.write("%s\n" % file1)
-            f.write("%s\n" % dirGDAS)
-            f.write("%s\n" % file2)
-            f.write("%s\n" % dirGDAS)
-            f.write("%s\n" % file3)
-            f.write("%s\n" % dirGDAS)
-            f.write("%s\n" % file4)
-            f.write("%s\n" % dirGDAS)
-            f.write("%s\n" % file5)
-            if file6 != '':
-                f.write("%s\n" % dirGDAS)
-                f.write("%s\n" % file6)
-            f.write("%s\n" % dirOutput)
-            f.write("traj_%s_%s%s%s%s" % (param["station"], YY, MM, DD, HH))
-            f.close()
+        currentFile = "traj_"+param["station"]+"_"+YY+MM+DD+HH
+        if file_exists(dirOutput+currentFile):
+            YY, MM, DD, HH = update_date(YY, MM, DD, HH, param["stepHH"])
+            print("file already exist :", currentFile)
+            continue
+        cfile = open(CONTROL, "r").readlines()
+        if currentFile in cfile[-1].strip():
+            YY, MM, DD, HH = update_date(YY, MM, DD, HH, param["stepHH"])
+            print("file is already processing:", currentFile)
+            time.sleep(np.random.rand()*3)
+            continue
+        #if not file_exists(dirOutput+currentFile):
+        ## create file name
+        #file1, previous month
+        if MM=="01":
+            mon = "dec"
+            year = str(int(YY)-1)
+        else:
+            mon = dt.datetime(int(YY)+2000, int(MM)-1, 1).strftime("%b").lower()
+            year = YY
+        file1 = "gdas1."+mon+year+".w5"
+        if not os.path.exists(dirGDAS+file1):
+            file1 = "gdas1."+mon+year+".w4"
+        #other file (all the current month)
+        mon = dt.datetime(int(YY)+2000, int(MM), 1).strftime("%b").lower()
+        year = YY
+        file2 = "gdas1."+mon+year+".w1"
+        file3 = "gdas1."+mon+year+".w2"
+        file4 = "gdas1."+mon+year+".w3"
+        file5 = "gdas1."+mon+year+".w4"
+        file6 = "gdas1."+mon+year+".w5"
+        if not os.path.exists(dirGDAS+file6):
+            file6 = ''
+
+        #Write the CONTROL file
+        f =  "%s %s %s %s\n" % (YY, MM, DD, HH)
+        f += "1\n"
+        f += "%s %s %s\n" % (param["lat"], param["lon"], param["alt"])
+        f += "%s\n" % param["hBT"]
+        f += "0\n"
+        f += "10000.0\n"
+        if file6 != '':
+            f += "6\n"
+        else:
+            f += "5\n"
+        f += "%s\n" % dirGDAS
+        f += "%s\n" % file1
+        f += "%s\n" % dirGDAS
+        f += "%s\n" % file2
+        f += "%s\n" % dirGDAS
+        f += "%s\n" % file3
+        f += "%s\n" % dirGDAS
+        f += "%s\n" % file4
+        f += "%s\n" % dirGDAS
+        f += "%s\n" % file5
+        if file6 != '':
+            f += "%s\n" % dirGDAS
+            f += "%s\n" % file6
+        f += "%s\n" % dirOutput
+        f += "traj_%s_%s%s%s%s\n" % (param["station"], YY, MM, DD, HH)
+        if not file_exists(dirOutput+currentFile):
+            file = open(CONTROL, 'w')
+            file.write(f)
+            file.close()
+            print("Processing : ", currentFile)
             os.system(HysplitExec)
+            time.sleep(np.random.rand()*3)
     
-        HH=int(HH)+int(param["stepHH"])
-        if HH>=24:
-            HH="00"
-            DD=int(DD)+1
-            if DD == int(calendar.monthrange(int(YY)+2000, int(MM))[1]+1):
-                DD="01"
-                MM=int(MM)+1
-                if MM==13:
-                    MM="01"
-                    YY=int(YY)+1
-        HH=str(HH)
-        DD=str(DD)
-        MM=str(MM)
-        YY=str(YY)
-        if len(HH)==1:
-            HH="0"+HH
-        if len(DD)==1:
-            DD="0"+DD
-        if len(MM)==1:
-            MM="0"+MM
-    
-    # Convert the file for the PSCF
-    #filelist = os.listdir(dirOutput)
-    #for file in filelist:
-    #    nameout=dirConverted+file+'_converted.txt'
-    #    fileout=open(nameout,'w')
-    #    f=open(dirOutput+file)
-    #    lines=f.readlines()
-    #    l=int(lines[0].replace(' ','')[0])
-    #    for i in range(l+4,len(lines)):
-    #        regex=re.compile(r'[\r\n\t]')
-    #        line=regex.sub(" ",lines[i])
-    #        line=re.split(' *', line)
-    #        line=line[2:len(line)-1]
-    #        #line = filter(None, lines[i].strip().split(' '))
-    #        lineout=''
-    #        lineout='%3.3f' % (float(line[2]),)
-    #        for j in range(3,len(line)):
-    #            lineout+=';%3.3f' % (float(line[j]),)
-    #        #lineout+=';%f \n' % (float(line[len(line)-1]),)
-    #        lineout+=' \n'
-    #        fileout.write(lineout)
+        YY, MM, DD, HH = update_date(YY, MM, DD, HH, param["stepHH"])
+
     return 1
 
 

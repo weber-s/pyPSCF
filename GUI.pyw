@@ -12,6 +12,8 @@ from multiprocessing import Process
 from pyPSCF import pyPSCF
 from pyPSCF.BackTrajHysplit import *
 
+import time
+
 if sys.version_info.major >= 3:
     from tkinter import *
     from tkinter.messagebox import *
@@ -1431,6 +1433,7 @@ class MainFrame(Frame):
         # self.notebook.select(2)
         # Compute the Back Traj
         for i in range(nbCPU):
+            time.sleep(1)
             p = Process(target=BT)
             p.start()
         # block until the last process finish
