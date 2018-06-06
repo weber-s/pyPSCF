@@ -1,4 +1,4 @@
-[![Documentation Status](https://readthedocs.org/projects/pypscf/badge/?version=latest)](http://pypscf.readthedocs.io/en/latest/?badge=latest) On [pypscf.readthedocs.org](readthedocs).
+[![Documentation Status](https://readthedocs.org/projects/pypscf/badge/?version=latest)](http://pypscf.readthedocs.io/en/latest/?badge=latest) On [readthedocs](https://pypscf.readthedocs.org).
 
 # pyPSCF
 The Potential Source Contribution Function is a tool to investigate the sources
