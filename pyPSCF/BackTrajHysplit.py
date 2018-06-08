@@ -3,38 +3,23 @@ import sys
 import numpy as np
 import time
 import datetime as dt
+from dateutil.relativedelta import relativedelta
 import calendar
 import re
 import json
 import shutil
+import pandas as pd
 
 
 def file_exists(path):
     return os.path.exists(path)
 
-def update_date(YY, MM, DD, HH, stepHH):
-    HH=int(HH)+int(stepHH)
-    if HH>=24:
-        HH="00"
-        DD=int(DD)+1
-        if DD == int(calendar.monthrange(int(YY)+2000, int(MM))[1]+1):
-            DD="01"
-            MM=int(MM)+1
-            if MM==13:
-                MM="01"
-                YY=int(YY)+1
-    HH=str(HH)
-    DD=str(DD)
-    MM=str(MM)
-    YY=str(YY)
-    if len(HH)==1:
-        HH="0"+HH
-    if len(DD)==1:
-        DD="0"+DD
-    if len(MM)==1:
-        MM="0"+MM
+def get_currentFile(station, d):
+    formatDate = dt.datetime.strftime(d, "%y%m%d%H")
+    return "traj_"+station+"_"+formatDate
 
-    return (YY, MM, DD, HH)
+def update_date(d, stepHH):
+    return d + pd.Timedelta(stepHH+"H")
 
 def BT():
     """
@@ -47,8 +32,11 @@ def BT():
     # ===== Load the parameters from the json file          ===================
     with open(os.path.normpath('parameters/localParamBackTraj.json'), 'r') as dataFile:
         param=json.load(dataFile)
-    YY,MM,DD,HH = int(param["date"][0]),int(param["date"][1]),int(param["date"][2]),int(param["date"][3])
-    YYend,MMend,DDend,HHend = int(param["dateEnd"][0]), int(param["dateEnd"][1]), int(param["dateEnd"][2]), int(param["dateEnd"][3])
+
+    curDate = pd.to_datetime(param["dateMin"])
+    endDate = pd.to_datetime(param["dateMax"])
+    # YY,MM,DD,HH = int(param["date"][0]),int(param["date"][1]),int(param["date"][2]),int(param["date"][3])
+    # YYend,MMend,DDend,HHend = int(param["dateEnd"][0]), int(param["dateEnd"][1]), int(param["dateEnd"][2]), int(param["dateEnd"][3])
     
     dirOutput       = param["dirOutput"]+os.sep
     HysplitExec     = param["dirHysplit"]+os.sep+"exec"+os.sep+"hyts_std"
@@ -58,71 +46,41 @@ def BT():
     dirGDAS         = param["dirGDAS"]+os.sep
     CONTROL         = dirHysplit+"CONTROL"
     
-#    if not os.path.exists(dirGDAS):
-#        print("The path for the GDAS file is wrong...")
-#        return 0
-#    if not os.path.exists(dirHysplit) or not os.path.exists(HysplitExec):
-#        print("The Hysplit directory or the 'hyts_std' command do not exist...")
-#        return 0
-#    if os.path.exists(dirOutput)==False:
-#        if sys.version_info.major >= 3:
-#            a=str(input("The output directory does not exist. Make one? ([y],n) "))
-#        else:
-#            a=str(raw_input("The output directory does not exist. Make one? ([y],n) "))
-#        if a=="y" or a=="Y" or a=="\n" or a=="yes":
-#            os.makedirs(dirOutput)
-#        else:
-#            print("Script exit")
-#            return 0
-#    if not os.path.exists(dirConverted):
-#        if sys.version_info.major >= 3:
-#            a=str(input("The output converted directory does not exist. Make one? ([y],n) "))
-#        else:
-#            a=str(raw_input("The output converted directory does not exist. Make one? ([y],n) "))
-#        if a=="y" or a=="Y" or a=="\n" or a=="yes":
-#            os.mkdir(dirConverted)
-#        else:
-#            print("Script exit")
-#            return 0
 
-    YY, MM, DD, HH = update_date(YY, MM, DD, HH, param["stepHH"])
+    curDate = update_date(curDate, param["stepHH"])
 
     # ===== Write the SETUP.CFG file                    =======================
     shutil.copy(os.path.normpath('parameters/SETUP_backTraj.CFG'), dirHysplit+"SETUP.CFG")
     # go to the hysplit dir
     os.chdir(dirHysplit)
     # ===== Compute the Back Traj                       =======================
-    while dt.datetime(YYend+2000, MMend, DDend, HHend) >= dt.datetime(int(YY)+2000, int(MM), int(DD), int(HH)):
-        currentFile = "traj_"+param["station"]+"_"+YY+MM+DD+HH
+    while endDate >= curDate: #dt.datetime(YYend+2000, MMend, DDend, HHend) >= dt.datetime(int(YY)+2000, int(MM), int(DD), int(HH)):
+        currentFile = get_currentFile(param["station"], curDate)
         if file_exists(dirOutput+currentFile):
-            YY, MM, DD, HH = update_date(YY, MM, DD, HH, param["stepHH"])
+            curDate = update_date(curDate, param["stepHH"])
             print("file already exist :", currentFile)
             continue
         cfile = open(CONTROL, "r").readlines()
         if currentFile in cfile[-1].strip():
-            YY, MM, DD, HH = update_date(YY, MM, DD, HH, param["stepHH"])
+            curDate = update_date(curDate, param["stepHH"])
             print("file is already processing:", currentFile)
             time.sleep(np.random.rand()*3)
             continue
         #if not file_exists(dirOutput+currentFile):
         ## create file name
         #file1, previous month
-        if MM=="01":
-            mon = "dec"
-            year = str(int(YY)-1)
-        else:
-            mon = dt.datetime(int(YY)+2000, int(MM)-1, 1).strftime("%b").lower()
-            year = YY
+        preDate = curDate + relativedelta(months=-1)
+        mon = dt.datetime.strftime(preDate, "%b").lower()
+        year = dt.datetime.strftime(preDate, "%y")
         file1 = "gdas1."+mon+year+".w5"
         if not os.path.exists(dirGDAS+file1):
             file1 = "gdas1."+mon+year+".w4"
         file0 = "gdas1."+mon+year+".w4"
         if file0 == file1:
             file0 = "gdas1."+mon+year+".w3"
-
         #other file (all the current month)
-        mon = dt.datetime(int(YY)+2000, int(MM), 1).strftime("%b").lower()
-        year = YY
+        mon = dt.datetime.strftime(curDate, "%b").lower()
+        year = dt.datetime.strftime(curDate, "%y")
         file2 = "gdas1."+mon+year+".w1"
         file3 = "gdas1."+mon+year+".w2"
         file4 = "gdas1."+mon+year+".w3"
@@ -131,16 +89,16 @@ def BT():
         if not os.path.exists(dirGDAS+file6):
             file6 = ''
         #file7, next month
-        if MM=="12":
-            mon = "jan"
-            year = str(int(YY)+1)
-        else:
-            mon = dt.datetime(int(YY)+2000, int(MM)+1, 1).strftime("%b").lower()
-            year = YY
+        nextDate = curDate + relativedelta(months=1)
+        mon = dt.datetime.strftime(nextDate, "%b").lower()
+        year = dt.datetime.strftime(nextDate, "%y")
         file7 = "gdas1."+mon+year+".w1"
 
-
         #Write the CONTROL file
+        YY = dt.datetime.strftime(curDate, "%y")
+        MM = dt.datetime.strftime(curDate, "%m")
+        DD = dt.datetime.strftime(curDate, "%d")
+        HH = dt.datetime.strftime(curDate, "%H")
         f =  "%s %s %s %s\n" % (YY, MM, DD, HH)
         f += "1\n"
         f += "%s %s %s\n" % (param["lat"], param["lon"], param["alt"])
@@ -169,7 +127,7 @@ def BT():
         f += "%s\n" % dirGDAS
         f += "%s\n" % file7
         f += "%s\n" % dirOutput
-        f += "traj_%s_%s%s%s%s\n" % (param["station"], YY, MM, DD, HH)
+        f += "%s\n" % currentFile
         if not file_exists(dirOutput+currentFile):
             file = open(CONTROL, 'w')
             file.write(f)
@@ -178,7 +136,7 @@ def BT():
             os.system(HysplitExec)
             time.sleep(np.random.rand()*3)
     
-        YY, MM, DD, HH = update_date(YY, MM, DD, HH, param["stepHH"])
+        curDate = update_date(curDate, param["stepHH"])
 
     return 1
 

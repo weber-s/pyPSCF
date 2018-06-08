@@ -1,24 +1,14 @@
 {
-    "cpu": 3,
-    "hBT": "-72",
-    "dirOutput": "/mnt/webersa/equipes/chianti/ESPACECERMO/Commun/BDD_METEO/Backtraj/GREfr/",
-    "dateEnd": [
-        "13",
-        "01",
-        "12",
-        "15"
-    ],
-    "lat": "45.16189",
-    "station": "GREfr",
-    "stepHH": "3",
+    "cpu": 1,
+    "stepHH": "1",
+    "dateMin": "2017-09-30 18",
+    "dateMax": "2017-10-03 16",
+    "alt": "100",
+    "dirGDAS": "/mnt/webersa/equipes/chianti/ESPACECERMO/Commun/BDD_METEO/GDAS1/",
+    "hBT": "-120",
+    "lat": "-21.0706",
     "dirHysplit": "/home/webersa/hysplit/",
-    "date": [
-        "13",
-        "01",
-        "11",
-        "15"
-    ],
-    "lon": "5.7356",
-    "dirGDAS": "/home/webersa/equipes/chianti/ESPACECERMO/Commun/BDD_METEO/",
-    "alt": "100"
+    "lon": "55.3879",
+    "dirOutput": "/mnt/webersa/equipes/chianti/ESPACECERMO/Commun/BDD_METEO/Backtraj/Maido_20171002/",
+    "station": "Maido"
 }

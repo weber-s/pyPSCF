@@ -599,52 +599,69 @@ class BacktrajTab(Frame):
                              pady=5)
 
         # Start time
-        self.startLabel = Label(self.time_frame, text="Starting day (YY/MM/DD/HH)", justify=LEFT)
+        self.startLabel = Label(self.time_frame, text="Starting day (YYYY-MM-DD HH)", justify=LEFT)
         self.startLabel.grid(row=0,
                              column=0,
                              sticky=E+W+S+N,
                              padx=5, pady=5)
-        self.buttonStart = Frame(self.time_frame)
-        self.buttonStart.grid(row=1, column=0, sticky=W+E+S+N, padx=5, pady=5)
-        self.YY = StringVar()
-        self.YY.set(self.param["date"][0])
-        self.YYLabel = Label(self.buttonStart, text="YY:", justify=LEFT).pack(side=LEFT)
-        self.YYEntry = EntryContext(self.buttonStart, width=5, textvariable=self.YY).pack(side=LEFT)
-        self.MM = StringVar()
-        self.MM.set(self.param["date"][1])
-        self.MMLabel = Label(self.buttonStart, text="MM:", justify=LEFT).pack(side=LEFT)
-        self.MMEntry = EntryContext(self.buttonStart, width=5, textvariable=self.MM).pack(side=LEFT)
-        self.DD = StringVar()
-        self.DD.set(self.param["date"][2])
-        self.DDLabel = Label(self.buttonStart, text="DD:", justify=LEFT).pack(side=LEFT)
-        self.DDEntry = EntryContext(self.buttonStart, width=5, textvariable=self.DD).pack(side=LEFT)
-        self.HH = StringVar()
-        self.HH.set(self.param["date"][3])
-        self.HHLabel = Label(self.buttonStart, text="HH:", justify=LEFT).pack(side=LEFT)
-        self.HHEntry = EntryContext(self.buttonStart, width=5, textvariable=self.HH).pack(side=LEFT)
-        # End time
-        self.endLabel = Label(self.time_frame, text="Ending day (YY/MM/DD/HH)", justify=LEFT)
-        self.endLabel.grid(row=2, column=0,
-                           sticky=E+W,
+        self.buttonMin = Frame(self.time_frame)
+        self.buttonMin.grid(row=0, column=1, sticky=W+E+S+N, padx=5, pady=5)
+        self.dateMin = StringVar()
+        self.dateMin.set(self.param["dateMin"])
+        self.dateMinEntry = EntryContext(self.buttonMin, width=20,
+                                         textvariable=self.dateMin).pack(side=LEFT)
+        # End date
+        self.endLabel = Label(self.time_frame, text="Ending day (YYYY-MM-DD HH)", justify=LEFT)
+        self.endLabel.grid(row=1, column=0,
+                           sticky=E+W+S+N,
                            padx=5, pady=0)
-        self.buttonEnd = Frame(self.time_frame)
-        self.buttonEnd.grid(row=3, column=0, sticky=W+E, padx=5, pady=5)
-        self.YYend = StringVar()
-        self.YYend.set(self.param["dateEnd"][0])
-        self.YYendLabel = Label(self.buttonEnd, text="YY:", justify=LEFT).pack(side=LEFT)
-        self.YYendEntry = EntryContext(self.buttonEnd, width=5, textvariable=self.YYend).pack(side=LEFT)
-        self.MMend = StringVar()
-        self.MMend.set(self.param["dateEnd"][1])
-        self.MMendLabel = Label(self.buttonEnd, text="MM:", justify=LEFT).pack(side=LEFT)
-        self.MMendEntry = EntryContext(self.buttonEnd, width=5, textvariable=self.MMend).pack(side=LEFT)
-        self.DDend = StringVar()
-        self.DDend.set(self.param["dateEnd"][2])
-        self.DDendLabel = Label(self.buttonEnd, text="DD:", justify=LEFT).pack(side=LEFT)
-        self.DDendEntry = EntryContext(self.buttonEnd, width=5, textvariable=self.DDend).pack(side=LEFT)
-        self.HHend = StringVar()
-        self.HHend.set(self.param["dateEnd"][3])
-        self.HHendLabel = Label(self.buttonEnd, text="HH:", justify=LEFT).pack(side=LEFT)
-        self.HHendEntry = EntryContext(self.buttonEnd, width=5, textvariable=self.HHend).pack(side=LEFT)
+        self.buttonMax = Frame(self.time_frame)
+        self.buttonMax.grid(row=1, column=1, sticky=W+E+S+N, padx=5, pady=5)
+        self.dateMax = StringVar()
+        self.dateMax.set(self.param["dateMax"])
+        self.dateMaxEntry = EntryContext(self.buttonMax, width=20,
+                                         textvariable=self.dateMax).pack(side=LEFT)
+
+        #
+        # self.YY = StringVar()
+        # self.YY.set(self.param["date"][0])
+        # self.YYLabel = Label(self.buttonStart, text="YY:", justify=LEFT).pack(side=LEFT)
+        # self.YYEntry = EntryContext(self.buttonStart, width=5, textvariable=self.YY).pack(side=LEFT)
+        # self.MM = StringVar()
+        # self.MM.set(self.param["date"][1])
+        # self.MMLabel = Label(self.buttonStart, text="MM:", justify=LEFT).pack(side=LEFT)
+        # self.MMEntry = EntryContext(self.buttonStart, width=5, textvariable=self.MM).pack(side=LEFT)
+        # self.DD = StringVar()
+        # self.DD.set(self.param["date"][2])
+        # self.DDLabel = Label(self.buttonStart, text="DD:", justify=LEFT).pack(side=LEFT)
+        # self.DDEntry = EntryContext(self.buttonStart, width=5, textvariable=self.DD).pack(side=LEFT)
+        # self.HH = StringVar()
+        # self.HH.set(self.param["date"][3])
+        # self.HHLabel = Label(self.buttonStart, text="HH:", justify=LEFT).pack(side=LEFT)
+        # self.HHEntry = EntryContext(self.buttonStart, width=5, textvariable=self.HH).pack(side=LEFT)
+        # # End time
+        # self.endLabel = Label(self.time_frame, text="Ending day (YY/MM/DD/HH)", justify=LEFT)
+        # self.endLabel.grid(row=2, column=0,
+        #                    sticky=E+W,
+        #                    padx=5, pady=0)
+        # self.buttonEnd = Frame(self.time_frame)
+        # self.buttonEnd.grid(row=3, column=0, sticky=W+E, padx=5, pady=5)
+        # self.YYend = StringVar()
+        # self.YYend.set(self.param["dateEnd"][0])
+        # self.YYendLabel = Label(self.buttonEnd, text="YY:", justify=LEFT).pack(side=LEFT)
+        # self.YYendEntry = EntryContext(self.buttonEnd, width=5, textvariable=self.YYend).pack(side=LEFT)
+        # self.MMend = StringVar()
+        # self.MMend.set(self.param["dateEnd"][1])
+        # self.MMendLabel = Label(self.buttonEnd, text="MM:", justify=LEFT).pack(side=LEFT)
+        # self.MMendEntry = EntryContext(self.buttonEnd, width=5, textvariable=self.MMend).pack(side=LEFT)
+        # self.DDend = StringVar()
+        # self.DDend.set(self.param["dateEnd"][2])
+        # self.DDendLabel = Label(self.buttonEnd, text="DD:", justify=LEFT).pack(side=LEFT)
+        # self.DDendEntry = EntryContext(self.buttonEnd, width=5, textvariable=self.DDend).pack(side=LEFT)
+        # self.HHend = StringVar()
+        # self.HHend.set(self.param["dateEnd"][3])
+        # self.HHendLabel = Label(self.buttonEnd, text="HH:", justify=LEFT).pack(side=LEFT)
+        # self.HHendEntry = EntryContext(self.buttonEnd, width=5, textvariable=self.HHend).pack(side=LEFT)
 
         # ===== Back Traj param     ===========================================
         self.bt_frame = LabelFrame(self.Backtraj_frame,
@@ -678,7 +695,7 @@ class BacktrajTab(Frame):
                             padx=5,
                             pady=5)
         self.cpu = IntVar()
-        self.cpu.set(os.cpu_count()-1)
+        self.cpu.set(1) # os.cpu_count()-1)
         self.CPULabel = Label(self.cpu_frame, text="Number of CPU")
         self.CPULabel.grid(row=0, column=0, sticky=W, padx=5, pady=5)
         self.CPUEntry = EntryContext(self.cpu_frame, width=5, textvariable=self.cpu)
@@ -748,8 +765,8 @@ class BacktrajTab(Frame):
                     "hBT": self.hBT.get(),
                     "cpu": self.cpu.get(),
                     "stepHH": self.stepHH.get(),
-                    "date": [self.YY.get(), self.MM.get(), self.DD.get(), self.HH.get()],
-                    "dateEnd": [self.YYend.get(), self.MMend.get(), self.DDend.get(), self.HHend.get()]
+                    "dateMin": self.dateMin.get(),
+                    "dateMax": self.dateMax.get(),
                 }
             except (ValueError, SyntaxError):
                 os.remove('parameters'+os.sep+'localParamBackTraj_tmp.json')
@@ -1330,7 +1347,7 @@ class MainFrame(Frame):
 
         # this allows using the mouse wheel even on the disabled Text widget
         # without the need to clic on said widget
-        self.tk_focusFollowsMouse()
+        # self.tk_focusFollowsMouse()
 
         self.notebook.bind("<<NotebookTabChanged>>", self.tab_callback)
 
