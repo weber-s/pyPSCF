@@ -116,6 +116,10 @@ def BT():
         file1 = "gdas1."+mon+year+".w5"
         if not os.path.exists(dirGDAS+file1):
             file1 = "gdas1."+mon+year+".w4"
+        file0 = "gdas1."+mon+year+".w4"
+        if file0 == file1:
+            file0 = "gdas1."+mon+year+".w3"
+
         #other file (all the current month)
         mon = dt.datetime(int(YY)+2000, int(MM), 1).strftime("%b").lower()
         year = YY
@@ -126,6 +130,15 @@ def BT():
         file6 = "gdas1."+mon+year+".w5"
         if not os.path.exists(dirGDAS+file6):
             file6 = ''
+        #file7, next month
+        if MM=="12":
+            mon = "jan"
+            year = str(int(YY)+1)
+        else:
+            mon = dt.datetime(int(YY)+2000, int(MM)+1, 1).strftime("%b").lower()
+            year = YY
+        file7 = "gdas1."+mon+year+".w1"
+
 
         #Write the CONTROL file
         f =  "%s %s %s %s\n" % (YY, MM, DD, HH)
@@ -135,9 +148,11 @@ def BT():
         f += "0\n"
         f += "10000.0\n"
         if file6 != '':
-            f += "6\n"
+            f += "8\n"
         else:
-            f += "5\n"
+            f += "7\n"
+        f += "%s\n" % dirGDAS
+        f += "%s\n" % file0
         f += "%s\n" % dirGDAS
         f += "%s\n" % file1
         f += "%s\n" % dirGDAS
@@ -151,6 +166,8 @@ def BT():
         if file6 != '':
             f += "%s\n" % dirGDAS
             f += "%s\n" % file6
+        f += "%s\n" % dirGDAS
+        f += "%s\n" % file7
         f += "%s\n" % dirOutput
         f += "traj_%s_%s%s%s%s\n" % (param["station"], YY, MM, DD, HH)
         if not file_exists(dirOutput+currentFile):
