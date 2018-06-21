@@ -72,27 +72,21 @@ def BT():
         preDate = curDate + relativedelta(months=-1)
         mon = dt.datetime.strftime(preDate, "%b").lower()
         year = dt.datetime.strftime(preDate, "%y")
-        file1 = "gdas1."+mon+year+".w5"
-        if not os.path.exists(dirGDAS+file1):
-            file1 = "gdas1."+mon+year+".w4"
-        file0 = "gdas1."+mon+year+".w4"
-        if file0 == file1:
-            file0 = "gdas1."+mon+year+".w3"
+        files = []
+        
+        files = ["gdas1."+mon+year+".w{i}".format(i=i) for i in range(1,6)]
         #other file (all the current month)
         mon = dt.datetime.strftime(curDate, "%b").lower()
         year = dt.datetime.strftime(curDate, "%y")
-        file2 = "gdas1."+mon+year+".w1"
-        file3 = "gdas1."+mon+year+".w2"
-        file4 = "gdas1."+mon+year+".w3"
-        file5 = "gdas1."+mon+year+".w4"
-        file6 = "gdas1."+mon+year+".w5"
-        if not os.path.exists(dirGDAS+file6):
-            file6 = ''
+        files += ["gdas1."+mon+year+".w{i}".format(i=i) for i in range(1,6)]
         #file7, next month
         nextDate = curDate + relativedelta(months=1)
         mon = dt.datetime.strftime(nextDate, "%b").lower()
         year = dt.datetime.strftime(nextDate, "%y")
-        file7 = "gdas1."+mon+year+".w1"
+        files += ["gdas1."+mon+year+".w1"]
+        for f in files:
+            if not os.path.exists(dirGDAS+f):
+                files.remove(f)
 
         #Write the CONTROL file
         YY = dt.datetime.strftime(curDate, "%y")
@@ -105,27 +99,10 @@ def BT():
         f += "%s\n" % param["hBT"]
         f += "0\n"
         f += "10000.0\n"
-        if file6 != '':
-            f += "8\n"
-        else:
-            f += "7\n"
-        f += "%s\n" % dirGDAS
-        f += "%s\n" % file0
-        f += "%s\n" % dirGDAS
-        f += "%s\n" % file1
-        f += "%s\n" % dirGDAS
-        f += "%s\n" % file2
-        f += "%s\n" % dirGDAS
-        f += "%s\n" % file3
-        f += "%s\n" % dirGDAS
-        f += "%s\n" % file4
-        f += "%s\n" % dirGDAS
-        f += "%s\n" % file5
-        if file6 != '':
+        f += "%s\n" % len(files)
+        for file in files:
             f += "%s\n" % dirGDAS
-            f += "%s\n" % file6
-        f += "%s\n" % dirGDAS
-        f += "%s\n" % file7
+            f += "%s\n" % file
         f += "%s\n" % dirOutput
         f += "%s\n" % currentFile
         if not file_exists(dirOutput+currentFile):
