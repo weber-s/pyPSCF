@@ -74,16 +74,16 @@ def BT():
         year = dt.datetime.strftime(preDate, "%y")
         files = []
         
-        files = ["gdas1."+mon+year+".w{i}".format(i=i) for i in range(1,6)]
+        files = ["gdas1."+mon+year+".w{i}".format(i=i) for i in range(3,6)]
         #other file (all the current month)
         mon = dt.datetime.strftime(curDate, "%b").lower()
         year = dt.datetime.strftime(curDate, "%y")
         files += ["gdas1."+mon+year+".w{i}".format(i=i) for i in range(1,6)]
         #file7, next month
-        nextDate = curDate + relativedelta(months=1)
-        mon = dt.datetime.strftime(nextDate, "%b").lower()
-        year = dt.datetime.strftime(nextDate, "%y")
-        files += ["gdas1."+mon+year+".w1"]
+        # nextDate = curDate + relativedelta(months=1)
+        # mon = dt.datetime.strftime(nextDate, "%b").lower()
+        # year = dt.datetime.strftime(nextDate, "%y")
+        # files += ["gdas1."+mon+year+".w1"]
         for f in files:
             if not os.path.exists(dirGDAS+f):
                 files.remove(f)
