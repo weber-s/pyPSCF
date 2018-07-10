@@ -74,3 +74,24 @@ Install latest release version via pip
 ``````````````````````````````````````
 
 TODO
+
+
+GUI Configuration
+-----------------
+
+If you use the GUI tool, you need some customization.
+
+Copy the default parameters files in `parameters/` and delete the `_default`
+part of their names. You should have the following files in `parameters/`:
+
+    parameters
+       ├── SETUP_backTraj.CFG
+       ├── localParamBackTraj.json
+       ├── localParamBackTraj_default.json
+       ├── localParamPSCF.json
+       ├── localParamPSCF_default.json
+       ├── locationStation.json
+       └── locationStation_default.json
+
+That's all. 
+Then, run the GUI with `python3 GUI.pyw`.

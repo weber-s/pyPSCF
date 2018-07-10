@@ -1,0 +1,14 @@
+{
+    "lat": "81.573333",
+    "stepHH": "1",
+    "hBT": "-240",
+    "dirOutput": "/mnt/webersa/equipes/chianti/ESPACECERMO/Commun/BDD_METEO/Backtraj/STN/",
+    "dirGDAS": "/mnt/webersa/equipes/chianti/ESPACECERMO/Commun/BDD_METEO/GDAS1/",
+    "lon": "-16.64",
+    "dateMax": "2017-07-02 16",
+    "dirHysplit": "/home/webersa/hysplit/",
+    "alt": "100",
+    "station": "STN",
+    "dateMin": "2017-05-01 00",
+    "cpu": 1
+}
