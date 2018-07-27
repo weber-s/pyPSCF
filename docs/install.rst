@@ -7,9 +7,8 @@ python.
 - Linux: it should be already installed. However, depending on your
   distribution, you may have python 2 by default. We do not ensure the
   compatibility.
-- Windows: just use python throught anaconda. It's way more easier. But use
+- Windows/macOS: just use python throught anaconda. It's way more easier. But use
   anaconda for python 3.
-- macOS: I do not known. If someone do, please edit this line :).
 
 Requirements
 ````````````
