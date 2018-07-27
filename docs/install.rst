@@ -24,8 +24,8 @@ https://ready.arl.noaa.gov/HYSPLIT.php .
 
 You may also need the NCEP reanalyse GDAS, available in by the NOAA.
 
-Python
-''''''
+Python library
+''''''''''''''
 
 pyPSCF use the following library:
 
