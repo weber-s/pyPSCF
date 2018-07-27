@@ -11,6 +11,7 @@ Welcome to pyPSCF's documentation!
    :caption: Contents:
 
    Install <install.rst>
+   GUI tool <GUI.rst>
    Development <development.rst>
    API <modules.rst>
 

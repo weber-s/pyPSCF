@@ -12,13 +12,13 @@ non-exhaustif list of TODO:
 - add a propoer setup.py file... and use pypi
 - ...
 
-Code is hosted in github at https://github.com/weber-s/pyPSCF/ .
+Code is hosted at https://gricad-gitlab.univ-grenoble-alpes.fr/webersa/pyPSCF/ .
 
 Issues
 ~~~~~~
 
 You can submit issues or suggestion directly throught github using the `issue
-tracker <https://github.com/weber-s/pyPSCF/issues>`
+tracker <https://gricad-gitlab.univ-grenoble-alpes.fr/webersa/issues>`
 
 Collaborating
 ~~~~~~~~~~~~~
